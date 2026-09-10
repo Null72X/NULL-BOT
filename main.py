@@ -1250,31 +1250,45 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
 
     feats_str = "\n".join(cleaned_feats[:8])
 
-    # Big, bold Markdown body matching the user's screenshot
+    p1_pad = f"{p1:<22}"
+    p7_pad = f"{p7:<22}"
+    p30_pad = f"{p30:<22}"
+    plife_pad = f"{plife:<22}"
+
+    pricing_table = (
+        "```\n"
+        "┌───────────────────────────────────────────────────────────┐\n"
+        "│                SUBSCRIPTION PRICING PLANS                 │\n"
+        "├───────────────────────────────┬───────────────────────────┤\n"
+        f"│  1 DAY ACCESS                 │  {p1_pad} │\n"
+        f"│  7 DAYS ACCESS                │  {p7_pad} │\n"
+        f"│  30 DAYS VIP PASS             │  {p30_pad} │\n"
+        f"│  LIFETIME UNLIMITED ACCESS    │  {plife_pad} │\n"
+        "└───────────────────────────────┴───────────────────────────┘\n"
+        "```"
+    )
+
+    # Big, bold Markdown body matching the user's reference release
     desc_lines = [
-        f"# 📢 NULL • {raw_name.upper()}",
-        f"> **Status:** {clean_status}  •  **Category:** {cat.upper()}  •  **Stock:** {stock.upper()}",
+        f"# 📢 NULL • {raw_name.upper()} RELEASE",
+        "> **# 🔥 LATEST OB54 BUILD IS NOW LIVE & 100% UNDETECTED**",
         "",
-        "### 📋 PRODUCT OVERVIEW",
+        "## 🚨 PREMIUM BUILD ACCESS READY",
+        "> We are excited to announce that both External & Internal builds are officially updated with full anti-detection safety!",
         f"> {desc}",
         "",
-        "### 💰 SUBSCRIPTION PRICING",
-        "```yaml",
-        f"1 DAY    : {p1}",
-        f"7 DAYS   : {p7}",
-        f"30 DAYS  : {p30}",
-        f"LIFETIME : {plife}",
-        "```",
+        "### 💰 SUBSCRIPTION PRICING PLANS",
+        pricing_table,
         "",
-        "### ⚙️ SYSTEM COMPATIBILITY",
-        f"> {compat}",
+        "### ⚠️ IMPORTANT SAFETY ADVISORY",
+        "> Full streamproof overlay enabled. 100% invisible on Discord screenshare, OBS Studio, and recording software. Direct kernel injection ensures your main account remains completely safe on all servers.",
         "",
-        "### ⚡ KEY HIGHLIGHTS",
-        feats_str,
+        "### ⚙️ SYSTEM & HARDWARE COMPATIBILITY",
+        "> **Operating System:** Windows 10 / 11 (All Builds & Versions)",
+        "> **Hardware & Processors:** Intel & AMD Supported",
+        f"> **System Specification:** {compat} (64-Bit Architecture)",
         "",
-        "### 🎫 CUSTOMER SUPPORT DESK",
-        "> Need help or ready to purchase? Click **Buy / Order** below.",
-        f"> **Store Owner:** @{BOT_NAME}  •  **Support:** Open a Ticket"
+        f"> 💬 **Customer Support:** Open a Ticket  •  👑 **Store Owner:** @{BOT_NAME}"
     ]
 
     color_obj = discord.Color.from_rgb(239, 68, 68)
@@ -1283,6 +1297,16 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
         description="\n".join(desc_lines),
         color=color_obj,
         timestamp=datetime.now()
+    )
+
+    embed.add_field(name="📌 Category", value=f"`{cat.upper()}`", inline=True)
+    embed.add_field(name="🛡️ Security Status", value=f"`{clean_status}`", inline=True)
+    embed.add_field(name="🎫 Ticket Desk", value="`# 🎫・Ticket`", inline=True)
+    embed.add_field(name="⚡ Key Highlights", value=feats_str, inline=False)
+    embed.add_field(
+        name="💬 Customer Support Desk",
+        value=f"> 💬 **Need Help?** Open a ticket in **# 🎫・Ticket**\n> 👑 **Store Owner:** @{BOT_NAME}",
+        inline=False
     )
 
     # Media / Banners (Supports direct URL, CDN links, and attachments)
