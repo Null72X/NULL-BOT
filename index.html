@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NULL Bot | Discord Control Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #070709;
+            --panel-bg: rgba(18, 18, 24, 0.85);
+            --card-bg: rgba(18, 18, 24, 0.75);
+            --card-hover: rgba(26, 26, 36, 0.85);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(239, 68, 68, 0.4);
+            --border-focus: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --accent-red: #ef4444;
+            --accent-red-hover: #dc2626;
+            --accent-red-glow: rgba(239, 68, 68, 0.25);
+            --accent-gradient: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
+            --accent-green: #10b981;
+            --dc-bg: #1e1f24;
+            --dc-embed-bg: #2b2d31;
+            --dc-text: #dbdee1;
+            --dc-muted: #949ba4;
+        }
+
+        body {
+            background: 
+                radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.15), transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(185, 28, 28, 0.08), transparent 30%),
+                var(--bg);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #070709;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-red);
+        }
+
+        /* Header */
+        header {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: #f87171;
+            box-shadow: 0 0 15px var(--accent-red-glow);
+            transition: all 0.25s ease;
+        }
+
+        .brand:hover .brand-icon {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            background: linear-gradient(180deg, #ffffff 30%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #34d399;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #34d399;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #34d399;
+        }
+
+        .btn-custom-msg {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            color: #f8fafc;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-custom-msg:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #ffffff;
+            box-shadow: 0 4px 14px var(--accent-red-glow);
+            transform: translateY(-1px);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            flex: 1;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Toolbar: Search & Category Filter */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .category-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cat-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .cat-pill:hover {
+            color: var(--text-main);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .cat-pill.active {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            border-color: transparent;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 280px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+            color: var(--text-main);
+            padding: 10px 14px 10px 36px;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 2px var(--accent-red-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 14px;
+        }
+
+        /* Product Cards Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 3px;
+            background: transparent;
+            transition: background 0.25s;
+            z-index: 2;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow);
+            box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(239, 68, 68, 0.08);
+        }
+
+        .card:hover::before {
+            background: var(--accent-red);
+        }
+
+        .card-header {
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-title-wrap {
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-cat {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .status-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            white-space: nowrap;
+        }
+
+        .status-tag.updating {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .status-tag.detected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        /* Image banner */
+        .card-banner {
+            width: 100%;
+            height: 130px;
+            background: #090a0f;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-banner img,
+        .card-banner video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border: none;
+            outline: none;
+        }
+
+        .card-banner-placeholder {
+            color: var(--text-dim);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* Pricing Grid */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .price-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 8px 4px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-height: 52px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        .price-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        .price-label {
+            display: block;
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .price-val {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: #f87171;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        /* Feature Chips */
+        .features-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .feat-chip {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            padding: 2px 7px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* Channel Selector Row */
+        .channel-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .channel-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .channel-select {
+            width: 100%;
+            background: rgba(14, 14, 20, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .channel-select:focus {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 2px var(--accent-red-glow);
+        }
+
+        /* Card Actions */
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(12, 12, 18, 0.7);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-edit {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-edit:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #ffffff;
+        }
+
+        .btn-send {
+            flex: 1.2;
+            background: var(--accent-gradient);
+            border: none;
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+
+        .btn-send:hover {
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 5, 8, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex !important;
+        }
+
+        .modal {
+            background: rgba(18, 18, 24, 0.95);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 1050px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(239, 68, 68, 0.15);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            line-height: 1;
+            transition: all 0.15s;
+        }
+
+        .modal-close:hover {
+            color: #ffffff;
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--accent-red);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 860px) {
+            .modal-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Form Inputs */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: rgba(10, 10, 15, 0.85);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 2px var(--accent-red-glow);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .form-row-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Upload Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            background: rgba(10, 10, 15, 0.6);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .dropzone-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .dropzone-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .dropzone-text strong {
+            color: #ef4444;
+        }
+
+        .upload-preview-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .upload-thumb {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .upload-thumb img,
+        .upload-thumb video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumb-remove {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thumb-remove:hover {
+            background: #ef4444;
+        }
+
+        /* Accent notice */
+        .color-badge-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-weight: 500;
+        }
+
+        /* Discord Preview Box */
+        .dc-preview-container {
+            background: #1e1f24;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #dbdee1;
+            font-size: 13px;
+        }
+
+        .dc-preview-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dc-embed {
+            background: #2b2d31;
+            border-left: 4px solid #ef4444;
+            border-radius: 4px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dc-embed-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .dc-embed-desc {
+            color: #dbdee1;
+            font-size: 13px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .dc-fields-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .dc-field-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #949ba4;
+            margin-bottom: 2px;
+        }
+
+        .dc-field-val {
+            font-size: 12px;
+            color: #dbdee1;
+        }
+
+        .dc-full-field {
+            margin-top: 4px;
+        }
+
+        .dc-full-field .dc-field-val {
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+
+        .dc-embed-img {
+            margin-top: 6px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-height: 200px;
+            display: none;
+        }
+
+        .dc-embed-img img,
+        .dc-embed-img video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .dc-footer {
+            font-size: 11px;
+            color: #949ba4;
+            margin-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 6px;
+        }
+
+        .dc-buttons-mock {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .dc-btn {
+            background: #4e5058;
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: default;
+        }
+
+        .dc-btn.primary {
+            background: #5865f2;
+        }
+
+        /* Modal Footer */
+        .modal-footer {
+            padding: 14px 20px;
+            background: rgba(14, 14, 20, 0.9);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-save {
+            background: #238636;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background: #2ea043;
+        }
+
+        .btn-save-send {
+            background: var(--accent-gradient);
+            border: none;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+
+        .btn-save-send:hover {
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(18, 18, 24, 0.95);
+            border: 1px solid var(--border);
+            border-left: 4px solid #ef4444;
+            color: #f8fafc;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+            animation: toastIn 0.2s ease-out;
+            max-width: 420px;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast a {
+            color: #f87171;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <a href="/" class="brand">
+                <div class="brand-icon">N</div>
+                <div>
+                    <div class="brand-title">NULL Bot</div>
+                    <div class="brand-subtitle">Discord Message & Product Manager</div>
+                </div>
+            </a>
+            <div class="header-actions">
+                <div class="status-badge" id="botStatusBadge">
+                    <span class="status-dot"></span>
+                    <span id="botStatusText">Connecting...</span>
+                </div>
+                <button class="btn-custom-msg" onclick="openCustomModal()">
+                    <span>📢</span> Custom Announcement
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="category-pills">
+                <button class="cat-pill active" data-filter="all">All (12)</button>
+                <button class="cat-pill" data-filter="external">External Plans (3)</button>
+                <button class="cat-pill" data-filter="internal">Internal Plans (3)</button>
+                <button class="cat-pill" data-filter="aim">Aim Assist (2)</button>
+                <button class="cat-pill" data-filter="streamer">Streamer Plans (3)</button>
+                <button class="cat-pill" data-filter="bypass">Bypass Plans (1)</button>
+            </div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search products, keywords..." />
+            </div>
+        </div>
+
+        <!-- Product Cards Grid -->
+        <div class="product-grid" id="productGrid">
+
+            <div class="card" data-pid="ext_lite" data-category="external plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 External-Lite</div>
+                        <span class="card-cat">External Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <img src="/uploads/banner_1788953842_4eecc2.png" alt="External-Lite" loading="lazy" />
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Null External Lite Panel For Free Fire 100% Safe in all Server</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹100</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹500</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,200</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹2,500</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">🎯 Aimbot</span><span class="feat-chip">⚡ Location</span><span class="feat-chip">🛡️ Stream Mode</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="ext_lite" data-saved-ch="1510598006959767562">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('ext_lite')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('ext_lite')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="ext_basic" data-category="external plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 External-Basic</div>
+                        <span class="card-cat">External Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <img src="/uploads/banner_1788954053_f11ac4.png" alt="External-Basic" loading="lazy" />
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Null External Lite Panel For Free Fire 100% Safe in all Server</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹200</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹3,800</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">🎯 Aimbot</span><span class="feat-chip">🚀 Sniper</span><span class="feat-chip">⚡ Location</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="ext_basic" data-saved-ch="1510598006959767562">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('ext_basic')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('ext_basic')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="ext_premium" data-category="external plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 External-Premium</div>
+                        <span class="card-cat">External Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <img src="/uploads/banner_1788954181_bf5431.png" alt="External-Premium" loading="lazy" />
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Null External Lite Panel For Free Fire 100% Safe in all Server</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹500</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹1,800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹3,500</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹7,000</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">🎯 Aimbot</span><span class="feat-chip">🚀 Sniper</span><span class="feat-chip">✨ Location</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="ext_premium" data-saved-ch="1510598006959767562">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('ext_premium')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('ext_premium')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="int_lite" data-category="internal plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Internal-Lite</div>
+                        <span class="card-cat">Internal Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <img src="/uploads/banner_1788954281_23e470.png" alt="Internal-Lite" loading="lazy" />
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Null External Lite Panel For Free Fire 100% Safe in all Server</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹150</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹600</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,400</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹3,000</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">🎯 Aimbot</span><span class="feat-chip">✨ Esp</span><span class="feat-chip">🔒 Stream Mode</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="int_lite" data-saved-ch="1543872330973978674">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('int_lite')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('int_lite')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="int_basic" data-category="internal plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Internal-Basic</div>
+                        <span class="card-cat">Internal Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <img src="/uploads/banner_1788954491_45b85d.png" alt="Internal-Basic" loading="lazy" />
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Null External Lite Panel For Free Fire 100% Safe in all Server</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹250</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹950</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹2,200</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹4,500</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">🎯 Aimbot</span><span class="feat-chip">⚡ Esp</span><span class="feat-chip">🔒 Stream Mode</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="int_basic" data-saved-ch="1543872330973978674">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('int_basic')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('int_basic')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="int_premium" data-category="internal plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Internal-Premium</div>
+                        <span class="card-cat">Internal Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <img src="/uploads/banner_1788954644_9bf324.png" alt="Internal-Premium" loading="lazy" />
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">The ultimate internal masterpiece: silent aim, full legit/rage switching, priority VIP updates, and skin changer.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹550</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹2,000</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹4,000</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹8,000</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">🎯 Aimbot</span><span class="feat-chip">⚡ Esp</span><span class="feat-chip">🔒 Stream Mode</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="int_premium" data-saved-ch="1543872330973978674">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('int_premium')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('int_premium')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="aim_assist" data-category="aim assist plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Aim-Assist</div>
+                        <span class="card-cat">Aim Assist Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <div class="card-banner-placeholder">🖼️ No image attached</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Natural humanized aim smoothing for both keyboard/mouse and controllers with anti-detection curve simulation.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹100</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹450</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,000</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹2,200</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">Humanized Aim Smoothing Curves</span><span class="feat-chip">Soft Lock on Target Center</span><span class="feat-chip">Controller & KBM Emulation</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="aim_assist" data-saved-ch="1547110395976749106">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('aim_assist')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('aim_assist')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="aim_assist_esp" data-category="aim assist plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Aim-Assist-ESP</div>
+                        <span class="card-cat">Aim Assist Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <div class="card-banner-placeholder">🖼️ No image attached</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Complete dual combo combining smooth humanized aim assist with clean player box & distance visuals.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹200</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹3,800</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">Soft Aim Assist with Auto-Tracking</span><span class="feat-chip">Clean 2D Player Box ESP</span><span class="feat-chip">Snaplines & Health Indicators</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="aim_assist_esp" data-saved-ch="1542075967328227339">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('aim_assist_esp')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('aim_assist_esp')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="ext_streamer" data-category="streamer plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Ext-Streamer</div>
+                        <span class="card-cat">Streamer Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <div class="card-banner-placeholder">🖼️ No image attached</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Streamer-grade external tool completely hidden from OBS Studio, Discord Screenshare, and ShadowPlay.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹500</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹1,900</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹3,800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹7,500</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">100% Invisible to Streaming / Recording Software</span><span class="feat-chip">Stealth Overlay Only Visible to You</span><span class="feat-chip">Ultra Smooth Natural Aim Assist</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="ext_streamer" data-saved-ch="1542076319297179688">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('ext_streamer')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('ext_streamer')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="int_streamer_basic" data-category="streamer plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Int-Streamer-Basic</div>
+                        <span class="card-cat">Streamer Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <div class="card-banner-placeholder">🖼️ No image attached</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Internal memory streamproof build providing seamless legit smoothing and hidden visuals for live broadcasts.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹350</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹1,300</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹2,800</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹5,800</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">Internal Kernel Bypass for Stream Capture</span><span class="feat-chip">Legit Smooth Aim with FOV Limiter</span><span class="feat-chip">Invisible Chams on Capture Devices</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="int_streamer_basic" data-saved-ch="1542076319297179688">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('int_streamer_basic')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('int_streamer_basic')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="int_streamer_lite" data-category="streamer plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Int-Streamer-Lite</div>
+                        <span class="card-cat">Streamer Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <div class="card-banner-placeholder">🖼️ No image attached</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Lightweight, high-framerate streamproof internal package designed for clean recordings and streams.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹200</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹750</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,600</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹3,500</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">OBS & Discord Invisible Hook</span><span class="feat-chip">Minimalist Chams Overlay</span><span class="feat-chip">High Refresh Rate (240Hz+ Ready)</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="int_streamer_lite" data-saved-ch="1542076319297179688">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('int_streamer_lite')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('int_streamer_lite')">🚀 Send</button>
+                </div>
+            </div>
+
+            <div class="card" data-pid="uid_bypass" data-category="bypass plans">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-title">🛒 Uid-Bypass</div>
+                        <span class="card-cat">Bypass Plans</span>
+                    </div>
+                    <span class="status-tag detected">🟢 Undetected</span>
+                </div>
+                <div class="card-banner">
+                    <div class="card-banner-placeholder">🖼️ No image attached</div>
+                </div>
+                <div class="card-body">
+                    <div class="card-desc">Advanced UID, HWID, and registry spoofer with deep kernel masking to bypass anti-cheat restrictions.</div>
+                    
+                    <div class="pricing-grid">
+                        <div class="price-item">
+                            <span class="price-label">1 Day</span>
+                            <span class="price-val p1-val">₹150</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">7 Days</span>
+                            <span class="price-val p7-val">₹550</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">30 Days</span>
+                            <span class="price-val p30-val">₹1,200</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-label">Lifetime</span>
+                            <span class="price-val plife-val">₹2,600</span>
+                        </div>
+                    </div>
+
+                    <div class="features-list">
+                        <span class="feat-chip">Full UID & HWID Randomizer</span><span class="feat-chip">Registry & Network Adapter Masking</span><span class="feat-chip">Disk Serial & BIOS Spoofer</span>
+                    </div>
+
+                    <div class="channel-row">
+                        <div class="channel-label">
+                            <span>Target Channel</span>
+                            <span style="font-size:10px; color:#ef4444;">Auto-Saves</span>
+                        </div>
+                        <select class="channel-select target-channel-select" data-pid="uid_bypass" data-saved-ch="1510597998219104390">
+                            <option value="">Detecting channels...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="openEditModal('uid_bypass')">✏️ Edit</button>
+                    <button class="btn-send" onclick="sendProductCard('uid_bypass')">🚀 Send</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Product Edit Modal -->
+    <div class="modal-overlay" id="editModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>✏️</span> Edit Product & Discord Message
+                </div>
+                <button class="modal-close" onclick="closeEditModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Left: Form Inputs -->
+                <div class="modal-form">
+                    <input type="hidden" id="editPid" />
+                    
+                    <div class="form-group">
+                        <label class="form-label">Product Title / Name</label>
+                        <input type="text" id="editName" class="form-input" oninput="updateLivePreview()" />
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select id="editCategory" class="form-select" onchange="updateLivePreview()">
+                                <option value="External Plans">External Plans</option>
+                                <option value="Internal Plans">Internal Plans</option>
+                                <option value="Aim Assist Plans">Aim Assist Plans</option>
+                                <option value="Streamer Plans">Streamer Plans</option>
+                                <option value="Bypass Plans">Bypass Plans</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select id="editStatus" class="form-select" onchange="updateLivePreview()">
+                                <option value="🟢 Undetected">🟢 Undetected</option>
+                                <option value="🟡 Updating">🟡 Updating</option>
+                                <option value="🔴 Detected">🔴 Detected</option>
+                                <option value="🛠️ Maintenance">🛠️ Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Stock Status</label>
+                            <input type="text" id="editStock" class="form-input" value="In Stock" oninput="updateLivePreview()" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Compatibility</label>
+                            <input type="text" id="editCompat" class="form-input" value="Windows 10 / 11 | Intel & AMD" oninput="updateLivePreview()" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Pricing Plans (INR)</label>
+                        <div class="form-row-4">
+                            <div>
+                                <span style="font-size:11px; color:#8b949e;">1 Day</span>
+                                <input type="text" id="editPrice1d" class="form-input" placeholder="₹100" oninput="updateLivePreview()" />
+                            </div>
+                            <div>
+                                <span style="font-size:11px; color:#8b949e;">7 Days</span>
+                                <input type="text" id="editPrice7d" class="form-input" placeholder="₹500" oninput="updateLivePreview()" />
+                            </div>
+                            <div>
+                                <span style="font-size:11px; color:#8b949e;">30 Days</span>
+                                <input type="text" id="editPrice30d" class="form-input" placeholder="₹1,200" oninput="updateLivePreview()" />
+                            </div>
+                            <div>
+                                <span style="font-size:11px; color:#8b949e;">Lifetime</span>
+                                <input type="text" id="editPriceLife" class="form-input" placeholder="₹2,500" oninput="updateLivePreview()" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Key Highlights / Features (1 per line)</label>
+                        <textarea id="editFeatures" class="form-textarea" rows="3" placeholder="🎯 Aimbot&#10;⚡ Location&#10;🛡️ Stream Mode" oninput="updateLivePreview()"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="editDesc" class="form-textarea" rows="2" placeholder="Product overview..." oninput="updateLivePreview()"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Target Channel & Audience Ping</label>
+                        <div class="form-row">
+                            <select id="modalChannelSelect" class="form-select">
+                                <option value="">Select Channel...</option>
+                            </select>
+                            <select id="modalPingSelect" class="form-select">
+                                <option value="none">No Ping</option>
+                                <option value="@here">@here</option>
+                                <option value="@everyone">@everyone</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Upload Media (Images, GIFs & Continuous Videos)</label>
+                        <div class="dropzone" id="imageDropzone">
+                            <div class="dropzone-icon">🎬</div>
+                            <div class="dropzone-text">Drag images, GIFs, or videos here, <strong>browse files</strong>, or press <strong>Ctrl+V</strong></div>
+                            <input type="file" id="imageFileInput" multiple accept="image/*,video/*,.gif,.mp4,.webm,.mov,.m4v,.ogg" style="display:none;" />
+                        </div>
+                        <div class="upload-preview-list" id="uploadThumbList"></div>
+                    </div>
+
+                    <div style="margin-top: 8px;">
+                        <span class="color-badge-note">
+                            🔴 Embed Accent Color: Crimson Red (Locked)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Right: Discord Live Preview -->
+                <div class="dc-preview-container">
+                    <div class="dc-preview-title">
+                        <span>Discord Message Preview</span>
+                        <span style="color:#ef4444; font-size:11px;">#ef4444 Red Accent</span>
+                    </div>
+
+                    <div class="dc-embed" id="previewEmbed">
+                        <div class="dc-embed-title" id="prevTitle">🛒 External-Lite</div>
+                        <div class="dc-embed-desc" id="prevDesc">Null External Lite Panel For Free Fire 100% Safe in all Server</div>
+                        
+                        <div class="dc-fields-grid">
+                            <div>
+                                <div class="dc-field-name">📂 Category</div>
+                                <div class="dc-field-val" id="prevCat">External Plans</div>
+                            </div>
+                            <div>
+                                <div class="dc-field-name">🛡️ Status</div>
+                                <div class="dc-field-val" id="prevStatus">🟢 Undetected</div>
+                            </div>
+                            <div>
+                                <div class="dc-field-name">📦 Stock</div>
+                                <div class="dc-field-val" id="prevStock">In Stock</div>
+                            </div>
+                        </div>
+
+                        <div class="dc-full-field">
+                            <div class="dc-field-name">💰 Pricing Plans (INR)</div>
+                            <div class="dc-field-val" id="prevPricing">
+• 1 Day: ₹100
+• 7 Days: ₹500
+• 30 Days: ₹1,200
+• Lifetime: ₹2,500</div>
+                        </div>
+
+                        <div class="dc-full-field">
+                            <div class="dc-field-name">💻 Compatibility</div>
+                            <div class="dc-field-val" id="prevCompat">Windows 10 / 11 (All Builds) | Intel & AMD</div>
+                        </div>
+
+                        <div class="dc-full-field" id="prevFeatsWrap">
+                            <div class="dc-field-name">✨ Key Highlights</div>
+                            <div class="dc-field-val" id="prevFeatures">
+✅ Aimbot
+✅ Location
+✅ Stream Mode</div>
+                        </div>
+
+                        <div class="dc-embed-img" id="prevImgWrap">
+                            <img id="prevImg" src="" alt="Banner" />
+                        </div>
+
+                        <div class="dc-footer" id="prevFooter">
+                            ID: ext_lite • NULL System • Today at 12:00 PM
+                        </div>
+                    </div>
+
+                    <div class="dc-buttons-mock">
+                        <button class="dc-btn primary">🛒 Buy Now</button>
+                        <button class="dc-btn">✨ Features</button>
+                        <button class="dc-btn">🎫 Open Ticket</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-save" id="btnSaveOnly" onclick="saveProductOnly()">💾 Save Changes</button>
+                <button class="btn-save-send" id="btnSaveAndSend" onclick="saveAndSendProduct()">🚀 Save & Send to Discord</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Announcement Modal -->
+    <div class="modal-overlay" id="customModalOverlay">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>📢</span> Send Custom Announcement
+                </div>
+                <button class="modal-close" onclick="closeCustomModal()">✕</button>
+            </div>
+            <div class="modal-body" style="grid-template-columns: 1fr;">
+                <div class="form-group">
+                    <label class="form-label">Target Channel</label>
+                    <select id="customChannelSelect" class="form-select">
+                        <option value="">Select Channel...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Audience Ping</label>
+                    <select id="customPingSelect" class="form-select">
+                        <option value="none">No Ping</option>
+                        <option value="@here">@here</option>
+                        <option value="@everyone">@everyone</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Announcement Title</label>
+                    <input type="text" id="customTitle" class="form-input" value="💎 NULL BOT ANNOUNCEMENT" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message Content</label>
+                    <textarea id="customDesc" class="form-textarea" rows="4" placeholder="Enter announcement text..."></textarea>
+                </div>
+                <div>
+                    <span class="color-badge-note">
+                        🔴 Embed Accent Color: Crimson Red (Locked)
+                    </span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeCustomModal()">Cancel</button>
+                <button class="btn-save-send" id="btnSendCustom" onclick="sendCustomAnnouncement()">🚀 Send Announcement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        let productsData = {};
+        let channelsData = [];
+        let uploadedImages = [];
+
+        function isVideoUrl(url) {
+            if (!url || typeof url !== 'string') return false;
+            const clean = url.split('?')[0].split('#')[0].toLowerCase();
+            return clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.endsWith('.mov') || clean.endsWith('.m4v') || clean.endsWith('.ogg');
+        }
+
+        // Fetch initial data
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([loadStatus(), loadChannels(), loadProducts()]);
+            setupSearchAndFilter();
+            setupDropzoneAndPaste();
+        });
+
+        // Ensure all continuous videos loop and remain unpaused
+        document.addEventListener('play', (e) => {
+            if (e.target && e.target.tagName === 'VIDEO') {
+                e.target.loop = true;
+                e.target.muted = true;
+            }
+        }, true);
+
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                const badge = document.getElementById('botStatusBadge');
+                const text = document.getElementById('botStatusText');
+                if (data.online) {
+                    badge.style.background = 'rgba(35, 134, 54, 0.15)';
+                    badge.style.borderColor = 'rgba(35, 134, 54, 0.4)';
+                    badge.style.color = '#3fb950';
+                    text.textContent = `Online • ${data.latency_ms || 15}ms`;
+                } else {
+                    badge.style.background = 'rgba(248, 81, 73, 0.15)';
+                    badge.style.borderColor = 'rgba(248, 81, 73, 0.4)';
+                    badge.style.color = '#f85149';
+                    text.textContent = 'Offline';
+                }
+            } catch (err) {
+                document.getElementById('botStatusText').textContent = 'Connecting...';
+            }
+        }
+
+        async function loadChannels() {
+            try {
+                const res = await fetch('/api/channels');
+                const json = await res.json();
+                channelsData = json.channels || [];
+                populateChannelSelects();
+            } catch (err) {
+                console.error('Failed to load channels:', err);
+            }
+        }
+
+        function populateChannelSelects() {
+            // Populate card channel selects
+            document.querySelectorAll('.target-channel-select').forEach(sel => {
+                const pid = sel.getAttribute('data-pid');
+                const savedCh = sel.getAttribute('data-saved-ch');
+                sel.innerHTML = '<option value="">-- Auto Detect Channel --</option>';
+                channelsData.forEach(ch => {
+                    const opt = document.createElement('option');
+                    opt.value = ch.id;
+                    opt.textContent = `#${ch.name} (${ch.guild_name})`;
+                    if (String(ch.id) === String(savedCh)) {
+                        opt.selected = true;
+                    }
+                    sel.appendChild(opt);
+                });
+
+                // Auto save when changed
+                sel.onchange = async () => {
+                    const chId = sel.value;
+                    sel.setAttribute('data-saved-ch', chId);
+                    if (productsData[pid]) {
+                        productsData[pid].saved_channel_id = chId;
+                    }
+                    try {
+                        await fetch('/api/save_channel', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ product_id: pid, channel_id: chId })
+                        });
+                        showToast(`Channel for ${pid} saved permanently!`, 'success');
+                    } catch (e) {
+                        console.error('Failed to save channel:', e);
+                    }
+                };
+            });
+
+            // Populate modal channel select
+            const modalSel = document.getElementById('modalChannelSelect');
+            const customSel = document.getElementById('customChannelSelect');
+            const optionsHtml = '<option value="">-- Select Discord Channel --</option>' + 
+                channelsData.map(ch => `<option value="${ch.id}">#${ch.name} (${ch.guild_name})</option>`).join('');
+            
+            if (modalSel) modalSel.innerHTML = optionsHtml;
+            if (customSel) customSel.innerHTML = optionsHtml;
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch('/api/products');
+                const data = await res.json();
+                productsData = data.products || {};
+                Object.keys(productsData).forEach(pid => {
+                    updateCardDisplay(pid);
+                });
+            } catch (err) {
+                console.error('Failed to load products:', err);
+            }
+        }
+
+        // Filtering and Search
+        function setupSearchAndFilter() {
+            const searchInput = document.getElementById('searchInput');
+            const catPills = document.querySelectorAll('.cat-pill');
+
+            function applyFilter() {
+                const query = (searchInput.value || '').trim().toLowerCase();
+                const activeCat = document.querySelector('.cat-pill.active')?.getAttribute('data-filter') || 'all';
+
+                document.querySelectorAll('.card').forEach(card => {
+                    const pid = card.getAttribute('data-pid');
+                    const p = productsData[pid] || {};
+                    const title = (p.name || pid).toLowerCase();
+                    const desc = (p.description || '').toLowerCase();
+                    const cat = (p.category || card.getAttribute('data-category') || '').toLowerCase();
+                    const feats = Array.isArray(p.features) ? p.features.join(' ').toLowerCase() : '';
+
+                    const matchesSearch = !query || title.includes(query) || desc.includes(query) || feats.includes(query);
+                    let matchesCat = true;
+                    if (activeCat !== 'all') {
+                        matchesCat = cat.includes(activeCat);
+                    }
+
+                    card.style.display = (matchesSearch && matchesCat) ? 'flex' : 'none';
+                });
+            }
+
+            searchInput.addEventListener('input', applyFilter);
+            catPills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    catPills.forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    applyFilter();
+                });
+            });
+        }
+
+        // Open Edit Modal
+        function openEditModal(pid) {
+            const p = productsData[pid] || {};
+            document.getElementById('editPid').value = pid;
+            document.getElementById('editName').value = p.name || pid;
+            document.getElementById('editCategory').value = p.category || 'External Plans';
+            document.getElementById('editStatus').value = p.status || '🟢 Undetected';
+            document.getElementById('editStock').value = p.stock || 'In Stock';
+            document.getElementById('editCompat').value = p.compatibility || 'Windows 10 / 11 | Intel & AMD';
+            
+            document.getElementById('editPrice1d').value = p.price_1d || '₹100';
+            document.getElementById('editPrice7d').value = p.price_7d || '₹500';
+            document.getElementById('editPrice30d').value = p.price_30d || '₹1,200';
+            document.getElementById('editPriceLife').value = p.price_lifetime || '₹2,500';
+
+            const fList = Array.isArray(p.features) ? p.features : (p.features ? [p.features] : []);
+            document.getElementById('editFeatures').value = fList.join('\n');
+            document.getElementById('editDesc').value = p.description || '';
+
+            // Selected channel
+            const cardCh = document.querySelector(`.target-channel-select[data-pid="${pid}"]`)?.value || p.saved_channel_id || '';
+            document.getElementById('modalChannelSelect').value = cardCh;
+
+            // Uploaded images
+            uploadedImages = [];
+            if (p.images && Array.isArray(p.images)) {
+                uploadedImages = [...p.images];
+            } else if (p.banner_url) {
+                uploadedImages = [p.banner_url];
+            }
+            renderUploadThumbs();
+            updateLivePreview();
+
+            document.getElementById('editModalOverlay').classList.add('open');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModalOverlay').classList.remove('open');
+        }
+
+        function updateLivePreview() {
+            const pid = document.getElementById('editPid').value;
+            const name = document.getElementById('editName').value || pid;
+            const cat = document.getElementById('editCategory').value;
+            const status = document.getElementById('editStatus').value;
+            const stock = document.getElementById('editStock').value;
+            const compat = document.getElementById('editCompat').value;
+            const desc = document.getElementById('editDesc').value || 'No description provided.';
+
+            const p1 = document.getElementById('editPrice1d').value || '₹100';
+            const p7 = document.getElementById('editPrice7d').value || '₹500';
+            const p30 = document.getElementById('editPrice30d').value || '₹1,200';
+            const plife = document.getElementById('editPriceLife').value || '₹2,500';
+
+            document.getElementById('prevTitle').textContent = `🛒 ${name}`;
+            document.getElementById('prevDesc').textContent = desc;
+            document.getElementById('prevCat').textContent = cat;
+            document.getElementById('prevStatus').textContent = status;
+            document.getElementById('prevStock').textContent = stock;
+            document.getElementById('prevCompat').textContent = compat;
+
+            document.getElementById('prevPricing').textContent = 
+`• 1 Day: ${p1}
+• 7 Days: ${p7}
+• 30 Days: ${p30}
+• Lifetime: ${plife}`;
+
+            const featsRaw = document.getElementById('editFeatures').value.split('\n').map(s => s.trim()).filter(Boolean);
+            if (featsRaw.length > 0) {
+                document.getElementById('prevFeatsWrap').style.display = 'block';
+                document.getElementById('prevFeatures').textContent = featsRaw.map(f => f.startsWith('✅') ? f : `✅ ${f}`).join('\n');
+            } else {
+                document.getElementById('prevFeatsWrap').style.display = 'none';
+            }
+
+            // Image / GIF / Video Preview
+            const imgWrap = document.getElementById('prevImgWrap');
+            if (uploadedImages.length > 0) {
+                imgWrap.style.display = 'block';
+                const firstMedia = uploadedImages[0];
+                if (isVideoUrl(firstMedia)) {
+                    imgWrap.innerHTML = `<video src="${firstMedia}" autoplay loop muted playsinline preload="auto" disablepictureinpicture style="width:100%;height:100%;object-fit:cover;border-radius:4px;display:block;"></video>`;
+                } else {
+                    imgWrap.innerHTML = `<img id="prevImg" src="${firstMedia}" alt="Banner" style="width:100%;height:100%;object-fit:cover;border-radius:4px;display:block;" />`;
+                }
+            } else {
+                imgWrap.style.display = 'none';
+            }
+
+            document.getElementById('prevFooter').textContent = `ID: ${pid} • NULL System • Today`;
+        }
+
+        // Dropzone & Paste Support
+        function setupDropzoneAndPaste() {
+            const dropzone = document.getElementById('imageDropzone');
+            const fileInput = document.getElementById('imageFileInput');
+
+            dropzone.addEventListener('click', () => fileInput.click());
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    uploadFiles(e.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    uploadFiles(fileInput.files);
+                }
+            });
+
+            // Clipboard paste listener
+            window.addEventListener('paste', (e) => {
+                if (!document.getElementById('editModalOverlay').classList.contains('open')) return;
+                const items = (e.clipboardData || window.clipboardData).items;
+                const files = [];
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1 || items[i].type.indexOf('video') !== -1) {
+                        const file = items[i].getAsFile();
+                        if (file) files.push(file);
+                    }
+                }
+                if (files.length > 0) {
+                    e.preventDefault();
+                    uploadFiles(files);
+                }
+            });
+        }
+
+        async function uploadFiles(files) {
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+            try {
+                showToast('Uploading media (image/GIF/video)...');
+                const res = await fetch('/api/upload_image', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                if (json.success && json.files) {
+                    json.files.forEach(f => {
+                        if (!uploadedImages.includes(f.url)) {
+                            uploadedImages.push(f.url);
+                        }
+                    });
+                    renderUploadThumbs();
+                    updateLivePreview();
+                    showToast('Media uploaded successfully!', 'success');
+                } else {
+                    showToast('Failed to upload media: ' + (json.error || 'Server error'), 'error');
+                }
+            } catch (err) {
+                showToast('Upload error: ' + err.message, 'error');
+            }
+        }
+
+        function renderUploadThumbs() {
+            const list = document.getElementById('uploadThumbList');
+            list.innerHTML = '';
+            uploadedImages.forEach((url, idx) => {
+                const thumb = document.createElement('div');
+                thumb.className = 'upload-thumb';
+                const mediaEl = isVideoUrl(url)
+                    ? `<video src="${url}" autoplay loop muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block;"></video>`
+                    : `<img src="${url}" alt="thumb" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+                thumb.innerHTML = `
+                    ${mediaEl}
+                    <button type="button" class="thumb-remove" onclick="removeImage(${idx})">✕</button>
+                `;
+                list.appendChild(thumb);
+            });
+        }
+
+        function removeImage(idx) {
+            uploadedImages.splice(idx, 1);
+            renderUploadThumbs();
+            updateLivePreview();
+        }
+
+        // Save Changes Only
+        async function saveProductOnly() {
+            const pid = document.getElementById('editPid').value;
+            const btn = document.getElementById('btnSaveOnly');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const payload = getModalFormData(pid);
+
+            try {
+                const res = await fetch('/api/edit_product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    // Update local store
+                    productsData[pid] = { ...(productsData[pid] || {}), ...payload };
+                    updateCardDisplay(pid);
+                    closeEditModal();
+                    showToast(`Changes saved for ${payload.name || pid}!`, 'success');
+                } else {
+                    showToast('Error: ' + (json.error || 'Failed to save'), 'error');
+                }
+            } catch (err) {
+                showToast('Save error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '💾 Save Changes';
+            }
+        }
+
+        // Save and Send to Discord
+        async function saveAndSendProduct() {
+            const pid = document.getElementById('editPid').value;
+            const chId = document.getElementById('modalChannelSelect').value;
+            if (!chId) {
+                showToast('Please select a target Discord channel first.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveAndSend');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            const payload = getModalFormData(pid);
+            payload.channel_id = chId;
+            payload.ping = document.getElementById('modalPingSelect').value;
+
+            try {
+                const res = await fetch('/api/send_product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    productsData[pid] = { ...(productsData[pid] || {}), ...payload, saved_channel_id: chId };
+                    updateCardDisplay(pid);
+                    closeEditModal();
+                    const linkHtml = json.jump_url ? ` <a href="${json.jump_url}" target="_blank">View in Discord</a>` : '';
+                    showToast(`Successfully sent to #${json.channel_name || 'channel'}!${linkHtml}`, 'success');
+                } else {
+                    showToast('Error: ' + (json.error || 'Failed to send'), 'error');
+                }
+            } catch (err) {
+                showToast('Send error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Save & Send to Discord';
+            }
+        }
+
+        // Send directly from card
+        async function sendProductCard(pid) {
+            const card = document.querySelector(`.card[data-pid="${pid}"]`);
+            const sel = card?.querySelector('.target-channel-select');
+            const chId = sel ? sel.value : '';
+
+            if (!chId) {
+                showToast('Please select a Discord channel on the card first!', 'error');
+                return;
+            }
+
+            const btn = card.querySelector('.btn-send');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const res = await fetch('/api/send_product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: pid, channel_id: chId })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    const linkHtml = json.jump_url ? ` <a href="${json.jump_url}" target="_blank">View in Discord</a>` : '';
+                    showToast(`Sent '${productsData[pid]?.name || pid}' to #${json.channel_name}!${linkHtml}`, 'success');
+                } else {
+                    showToast('Error: ' + (json.error || 'Failed to send'), 'error');
+                }
+            } catch (err) {
+                showToast('Send error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Send';
+            }
+        }
+
+        // Helper to extract form data from modal
+        function getModalFormData(pid) {
+            const feats = document.getElementById('editFeatures').value.split('\n').map(s => s.trim()).filter(Boolean);
+            const banner = uploadedImages.length > 0 ? uploadedImages[0] : '';
+            return {
+                product_id: pid,
+                name: document.getElementById('editName').value,
+                embed_title: `🛒 ${document.getElementById('editName').value}`,
+                category: document.getElementById('editCategory').value,
+                status: document.getElementById('editStatus').value,
+                stock: document.getElementById('editStock').value,
+                compatibility: document.getElementById('editCompat').value,
+                price_1d: document.getElementById('editPrice1d').value,
+                price_7d: document.getElementById('editPrice7d').value,
+                price_30d: document.getElementById('editPrice30d').value,
+                price_lifetime: document.getElementById('editPriceLife').value,
+                features: feats,
+                description: document.getElementById('editDesc').value,
+                banner_url: banner,
+                image_url: banner,
+                images: [...uploadedImages],
+                color: 'red'
+            };
+        }
+
+        // Instant Dynamic Real-time Card Update in DOM
+        function updateCardDisplay(pid) {
+            const card = document.querySelector(`.card[data-pid="${pid}"]`);
+            if (!card) return;
+            const p = productsData[pid];
+            if (!p) return;
+
+            // Title
+            const titleEl = card.querySelector('.card-title');
+            if (titleEl) titleEl.textContent = `🛒 ${p.name || pid}`;
+
+            // Category
+            const catEl = card.querySelector('.card-cat');
+            if (catEl) catEl.textContent = p.category || 'General';
+            card.setAttribute('data-category', (p.category || '').toLowerCase());
+
+            // Status
+            const stEl = card.querySelector('.status-tag');
+            if (stEl) {
+                stEl.textContent = p.status || '🟢 Undetected';
+                stEl.className = 'status-tag';
+                const sLow = (p.status || '').toLowerCase();
+                if (sLow.includes('updating')) stEl.classList.add('updating');
+                else if (sLow.includes('detected')) stEl.classList.add('detected');
+            }
+
+            // Description
+            const descEl = card.querySelector('.card-desc');
+            if (descEl) descEl.textContent = p.description || 'No description provided.';
+
+            // Prices
+            if (p.price_1d) card.querySelector('.p1-val').textContent = p.price_1d;
+            if (p.price_7d) card.querySelector('.p7-val').textContent = p.price_7d;
+            if (p.price_30d) card.querySelector('.p30-val').textContent = p.price_30d;
+            if (p.price_lifetime) card.querySelector('.plife-val').textContent = p.price_lifetime;
+
+            // Features
+            const featsListEl = card.querySelector('.features-list');
+            if (featsListEl && p.features) {
+                const feats = Array.isArray(p.features) ? p.features : [p.features];
+                featsListEl.innerHTML = feats.slice(0, 3).map(f => `<span class="feat-chip">${f}</span>`).join('');
+            }
+
+            // Banner media (Image, GIF, Continuous Video)
+            const bannerEl = card.querySelector('.card-banner');
+            const mediaUrl = (p.images && p.images[0]) || p.banner_url || p.image_url;
+            if (bannerEl) {
+                if (mediaUrl) {
+                    if (isVideoUrl(mediaUrl)) {
+                        bannerEl.innerHTML = `<video src="${mediaUrl}" autoplay loop muted playsinline preload="auto" disablepictureinpicture style="width:100%;height:100%;object-fit:cover;display:block;"></video>`;
+                    } else {
+                        bannerEl.innerHTML = `<img src="${mediaUrl}" alt="${p.name || pid}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+                    }
+                } else {
+                    bannerEl.innerHTML = '<div class="card-banner-placeholder">🖼️ No media attached</div>';
+                }
+            }
+
+            // Channel selector
+            if (p.saved_channel_id) {
+                const sel = card.querySelector('.target-channel-select');
+                if (sel) {
+                    sel.value = p.saved_channel_id;
+                    sel.setAttribute('data-saved-ch', p.saved_channel_id);
+                }
+            }
+        }
+
+        // Custom Announcement Modal
+        function openCustomModal() {
+            document.getElementById('customModalOverlay').classList.add('open');
+        }
+
+        function closeCustomModal() {
+            document.getElementById('customModalOverlay').classList.remove('open');
+        }
+
+        async function sendCustomAnnouncement() {
+            const chId = document.getElementById('customChannelSelect').value;
+            const title = document.getElementById('customTitle').value;
+            const desc = document.getElementById('customDesc').value;
+            const ping = document.getElementById('customPingSelect').value;
+
+            if (!chId) {
+                showToast('Please select a target channel.', 'error');
+                return;
+            }
+            if (!desc.trim()) {
+                showToast('Announcement content cannot be empty.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnSendCustom');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const res = await fetch('/api/send_custom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        channel_id: chId,
+                        title: title,
+                        description: desc,
+                        ping: ping,
+                        color: 'red',
+                        buy_button: true
+                    })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    closeCustomModal();
+                    const linkHtml = json.jump_url ? ` <a href="${json.jump_url}" target="_blank">View in Discord</a>` : '';
+                    showToast(`Announcement sent!${linkHtml}`, 'success');
+                } else {
+                    showToast('Error: ' + (json.error || 'Failed to send'), 'error');
+                }
+            } catch (err) {
+                showToast('Send error: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🚀 Send Announcement';
+            }
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4500);
+        }
+    </script>
+</body>
+</html>
