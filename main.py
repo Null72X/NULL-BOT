@@ -127,6 +127,285 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # DATA MANAGEMENT & BACKUPS
 # =========================================================
 
+DEFAULT_PRODUCTS = {
+    "ext_lite": {
+        "name": "External-Lite",
+        "category": "External Plans",
+        "description": "Null External Lite Panel For Free Fire 100% Safe in all Server",
+        "price_1d": "₹100",
+        "price_7d": "₹500",
+        "price_30d": "₹1,200",
+        "price_lifetime": "₹2,500",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "🎯 Aimbot",
+            "⚡ Location",
+            "🛡️ Stream Mode"
+        ],
+        "banner_url": "/uploads/banner_1788953842_4eecc2.png",
+        "image_url": "/uploads/banner_1788953842_4eecc2.png",
+        "images": [
+            "/uploads/banner_1788953842_4eecc2.png"
+        ],
+        "saved_channel_id": "1510598006959767562",
+        "color": "red"
+    },
+    "ext_basic": {
+        "name": "External-Basic",
+        "category": "External Plans",
+        "description": "Null External Lite Panel For Free Fire 100% Safe in all Server",
+        "price_1d": "₹200",
+        "price_7d": "₹800",
+        "price_30d": "₹1,800",
+        "price_lifetime": "₹3,800",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "🎯 Aimbot",
+            "🚀 Sniper",
+            "⚡ Location"
+        ],
+        "banner_url": "/uploads/banner_1788954053_f11ac4.png",
+        "image_url": "/uploads/banner_1788954053_f11ac4.png",
+        "images": [
+            "/uploads/banner_1788954053_f11ac4.png"
+        ],
+        "saved_channel_id": "1510598006959767562",
+        "color": "red"
+    },
+    "ext_premium": {
+        "name": "External-Premium",
+        "category": "External Plans",
+        "description": "Null External Lite Panel For Free Fire 100% Safe in all Server",
+        "price_1d": "₹500",
+        "price_7d": "₹1,800",
+        "price_30d": "₹3,500",
+        "price_lifetime": "₹7,000",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "🎯 Aimbot",
+            "🚀 Sniper",
+            "✨ Location"
+        ],
+        "banner_url": "/uploads/banner_1788954181_bf5431.png",
+        "image_url": "/uploads/banner_1788954181_bf5431.png",
+        "images": [
+            "/uploads/banner_1788954181_bf5431.png"
+        ],
+        "saved_channel_id": "1510598006959767562",
+        "color": "red"
+    },
+    "int_lite": {
+        "name": "Internal-Lite",
+        "category": "Internal Plans",
+        "description": "Null External Lite Panel For Free Fire 100% Safe in all Server",
+        "price_1d": "₹150",
+        "price_7d": "₹600",
+        "price_30d": "₹1,400",
+        "price_lifetime": "₹3,000",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "🎯 Aimbot",
+            "✨ Esp",
+            "🔒 Stream Mode"
+        ],
+        "banner_url": "/uploads/banner_1788954281_23e470.png",
+        "image_url": "/uploads/banner_1788954281_23e470.png",
+        "images": [
+            "/uploads/banner_1788954281_23e470.png"
+        ],
+        "saved_channel_id": "1543872330973978674",
+        "color": "red"
+    },
+    "int_basic": {
+        "name": "Internal-Basic",
+        "category": "Internal Plans",
+        "description": "Null External Lite Panel For Free Fire 100% Safe in all Server",
+        "price_1d": "₹250",
+        "price_7d": "₹950",
+        "price_30d": "₹2,200",
+        "price_lifetime": "₹4,500",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "🎯 Aimbot",
+            "⚡ Esp",
+            "🔒 Stream Mode"
+        ],
+        "banner_url": "/uploads/banner_1788954491_45b85d.png",
+        "image_url": "/uploads/banner_1788954491_45b85d.png",
+        "images": [
+            "/uploads/banner_1788954491_45b85d.png"
+        ],
+        "saved_channel_id": "1543872330973978674",
+        "color": "red"
+    },
+    "int_premium": {
+        "name": "Internal-Premium",
+        "category": "Internal Plans",
+        "description": "The ultimate internal masterpiece: silent aim, full legit/rage switching, priority VIP updates, and skin changer.",
+        "price_1d": "₹550",
+        "price_7d": "₹2,000",
+        "price_30d": "₹4,000",
+        "price_lifetime": "₹8,000",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "🎯 Aimbot",
+            "⚡ Esp",
+            "🔒 Stream Mode"
+        ],
+        "banner_url": "/uploads/banner_1788954644_9bf324.png",
+        "image_url": "/uploads/banner_1788954644_9bf324.png",
+        "images": [
+            "/uploads/banner_1788954644_9bf324.png"
+        ],
+        "saved_channel_id": "1543872330973978674",
+        "color": "red"
+    },
+    "aim_assist": {
+        "name": "Aim-Assist",
+        "category": "Aim Assist Plans",
+        "description": "Natural humanized aim smoothing for both keyboard/mouse and controllers with anti-detection curve simulation.",
+        "price_1d": "₹100",
+        "price_7d": "₹450",
+        "price_30d": "₹1,000",
+        "price_lifetime": "₹2,200",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "Humanized Aim Smoothing Curves",
+            "Soft Lock on Target Center",
+            "Controller & KBM Emulation"
+        ],
+        "banner_url": "",
+        "image_url": "",
+        "images": [],
+        "saved_channel_id": "1547110395976749106",
+        "color": "red"
+    },
+    "aim_assist_esp": {
+        "name": "Aim-Assist-ESP",
+        "category": "Aim Assist Plans",
+        "description": "Complete dual combo combining smooth humanized aim assist with clean player box & distance visuals.",
+        "price_1d": "₹200",
+        "price_7d": "₹800",
+        "price_30d": "₹1,800",
+        "price_lifetime": "₹3,800",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "Soft Aim Assist with Auto-Tracking",
+            "Clean 2D Player Box ESP",
+            "Snaplines & Health Indicators"
+        ],
+        "banner_url": "",
+        "image_url": "",
+        "images": [],
+        "saved_channel_id": "1542075967328227339",
+        "color": "red"
+    },
+    "ext_streamer": {
+        "name": "Ext-Streamer",
+        "category": "Streamer Plans",
+        "description": "Streamer-grade external tool completely hidden from OBS Studio, Discord Screenshare, and ShadowPlay.",
+        "price_1d": "₹500",
+        "price_7d": "₹1,900",
+        "price_30d": "₹3,800",
+        "price_lifetime": "₹7,500",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "100% Invisible to Streaming / Recording Software",
+            "Stealth Overlay Only Visible to You",
+            "Ultra Smooth Natural Aim Assist"
+        ],
+        "banner_url": "",
+        "image_url": "",
+        "images": [],
+        "saved_channel_id": "1542076319297179688",
+        "color": "red"
+    },
+    "int_streamer_basic": {
+        "name": "Int-Streamer-Basic",
+        "category": "Streamer Plans",
+        "description": "Internal memory streamproof build providing seamless legit smoothing and hidden visuals for live broadcasts.",
+        "price_1d": "₹350",
+        "price_7d": "₹1,300",
+        "price_30d": "₹2,800",
+        "price_lifetime": "₹5,800",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "Internal Kernel Bypass for Stream Capture",
+            "Legit Smooth Aim with FOV Limiter",
+            "Invisible Chams on Capture Devices"
+        ],
+        "banner_url": "",
+        "image_url": "",
+        "images": [],
+        "saved_channel_id": "1542076319297179688",
+        "color": "red"
+    },
+    "int_streamer_lite": {
+        "name": "Int-Streamer-Lite",
+        "category": "Streamer Plans",
+        "description": "Lightweight, high-framerate streamproof internal package designed for clean recordings and streams.",
+        "price_1d": "₹200",
+        "price_7d": "₹750",
+        "price_30d": "₹1,600",
+        "price_lifetime": "₹3,500",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "OBS & Discord Invisible Hook",
+            "Minimalist Chams Overlay",
+            "High Refresh Rate (240Hz+ Ready)"
+        ],
+        "banner_url": "",
+        "image_url": "",
+        "images": [],
+        "saved_channel_id": "1542076319297179688",
+        "color": "red"
+    },
+    "uid_bypass": {
+        "name": "Uid-Bypass",
+        "category": "Bypass Plans",
+        "description": "Advanced UID, HWID, and registry spoofer with deep kernel masking to bypass anti-cheat restrictions.",
+        "price_1d": "₹150",
+        "price_7d": "₹550",
+        "price_30d": "₹1,200",
+        "price_lifetime": "₹2,600",
+        "status": "🟢 Undetected",
+        "stock": "In Stock",
+        "compatibility": "Windows 10 / 11 | Intel & AMD",
+        "features": [
+            "Full UID & HWID Randomizer",
+            "Registry & Network Adapter Masking",
+            "Disk Serial & BIOS Spoofer"
+        ],
+        "banner_url": "",
+        "image_url": "",
+        "images": [],
+        "saved_channel_id": "1510597998219104390",
+        "color": "red"
+    }
+}
+
 DEFAULT_DATA = {
     "config": {
         "showcase_channel_id": str(DEFAULT_SHOWCASE_CHANNEL_ID),
@@ -135,8 +414,14 @@ DEFAULT_DATA = {
         "currency_symbol": CURRENCY_SYMBOL,
         "support_url": SUPPORT_URL
     },
-    "categories": {},
-    "products": {},
+    "categories": {
+        "external plans": "External Plans",
+        "internal plans": "Internal Plans",
+        "aim assist plans": "Aim Assist Plans",
+        "streamer plans": "Streamer Plans",
+        "bypass plans": "Bypass Plans"
+    },
+    "products": DEFAULT_PRODUCTS,
     "promos": {},
     "reviews": {},
     "analytics": {
@@ -146,7 +431,7 @@ DEFAULT_DATA = {
 }
 
 def load_json():
-    """Load product database with schema guarantees"""
+    """Load product database with schema guarantees and auto-seed defaults"""
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, 'r', encoding='utf-8') as f:
@@ -154,12 +439,26 @@ def load_json():
                 # Ensure all root keys exist
                 for key, val in DEFAULT_DATA.items():
                     if key not in data:
-                        data[key] = val
+                        data[key] = json.loads(json.dumps(val))
+                
+                # Auto-seed any missing default products
+                products = data.setdefault("products", {})
+                changed = False
+                for pid, pval in DEFAULT_PRODUCTS.items():
+                    if pid not in products:
+                        products[pid] = json.loads(json.dumps(pval))
+                        changed = True
+                if changed:
+                    save_json(data)
                 return data
         except Exception as e:
             print(f"⚠️ Warning loading {DATA_FILE}: {e}. Initializing defaults.")
-            return DEFAULT_DATA.copy()
-    return DEFAULT_DATA.copy()
+            data = json.loads(json.dumps(DEFAULT_DATA))
+            save_json(data)
+            return data
+    data = json.loads(json.dumps(DEFAULT_DATA))
+    save_json(data)
+    return data
 
 def save_json(data):
     """Save product data atomically and create rolling timestamped backup"""
@@ -2381,10 +2680,14 @@ def api_save_channel():
         return jsonify({"success": False, "error": "Missing product_id"}), 400
     
     data = load_json()
-    if product_id not in data.get("products", {}):
-        return jsonify({"success": False, "error": "Product not found."}), 404
+    products = data.setdefault("products", {})
+    if product_id not in products:
+        if product_id in DEFAULT_PRODUCTS:
+            products[product_id] = json.loads(json.dumps(DEFAULT_PRODUCTS[product_id]))
+        else:
+            products[product_id] = {"name": product_id}
     
-    data["products"][product_id]["saved_channel_id"] = str(channel_id) if channel_id else ""
+    products[product_id]["saved_channel_id"] = str(channel_id) if channel_id else ""
     data["products"][product_id]["updated_at"] = datetime.now().isoformat()
     save_json(data)
     return jsonify({"success": True, "product_id": product_id, "saved_channel_id": channel_id})
@@ -2453,9 +2756,28 @@ def api_send_product():
     ping = payload.get("ping", "none")
 
     data = load_json()
-    products = data.get("products", {})
+    products = data.setdefault("products", {})
     if product_id not in products:
-        return jsonify({"success": False, "error": f"Product '{product_id}' not found in database."}), 404
+        if product_id in DEFAULT_PRODUCTS:
+            products[product_id] = json.loads(json.dumps(DEFAULT_PRODUCTS[product_id]))
+            save_json(data)
+        else:
+            products[product_id] = {
+                "name": payload.get("name", product_id),
+                "category": payload.get("category", "Store Plans"),
+                "description": payload.get("description", "Store plan details."),
+                "price_1d": payload.get("price_1d", "₹100"),
+                "price_7d": payload.get("price_7d", "₹500"),
+                "price_30d": payload.get("price_30d", "₹1,200"),
+                "price_lifetime": payload.get("price_lifetime", "₹2,500"),
+                "status": payload.get("status", "🟢 Undetected"),
+                "stock": payload.get("stock", "In Stock"),
+                "compatibility": payload.get("compatibility", "Windows 10 / 11 | Intel & AMD"),
+                "features": payload.get("features", []),
+                "saved_channel_id": str(target_channel_id) if target_channel_id else "",
+                "color": "red"
+            }
+            save_json(data)
 
     save_permanent = payload.get("save_permanent", True)
 
@@ -2780,10 +3102,14 @@ def api_edit_product():
         return jsonify({"success": False, "error": "Missing product_id."}), 400
 
     data = load_json()
-    if product_id not in data.get("products", {}):
-        return jsonify({"success": False, "error": f"Product '{product_id}' not found."}), 404
-
-    p = data["products"][product_id]
+    products = data.setdefault("products", {})
+    if product_id not in products:
+        if product_id in DEFAULT_PRODUCTS:
+            products[product_id] = json.loads(json.dumps(DEFAULT_PRODUCTS[product_id]))
+        else:
+            products[product_id] = {"name": product_id, "category": "Store Plans", "description": ""}
+    
+    p = products[product_id]
     editable_fields = [
         "name", "category", "description", "price_1d", "price_7d",
         "price_30d", "price_lifetime", "status", "compatibility",
