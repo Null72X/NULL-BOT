@@ -930,7 +930,7 @@ class ProductCardView(discord.ui.View):
 
         # 1. Buy / Order button
         btn_buy = discord.ui.Button(
-            label="🛒 Buy / Order",
+            label="Buy / Order",
             style=discord.ButtonStyle.success,
             emoji="💳",
             custom_id=f"null_buy:{product_id}"
@@ -938,35 +938,38 @@ class ProductCardView(discord.ui.View):
         btn_buy.callback = self.buy_callback
         self.add_item(btn_buy)
 
-        # 2. Features button
+        # 2. Support / Ticket button
+        btn_support = discord.ui.Button(
+            label="Support / Ticket",
+            style=discord.ButtonStyle.secondary,
+            emoji="🎟️",
+            custom_id=f"null_support:{product_id}"
+        )
+        btn_support.callback = self.support_callback
+        self.add_item(btn_support)
+
+        # 3. Features button
         btn_feats = discord.ui.Button(
-            label="📋 Full Features",
-            style=discord.ButtonStyle.primary,
-            emoji="✨",
+            label="Features",
+            style=discord.ButtonStyle.secondary,
+            emoji="📋",
             custom_id=f"null_feats:{product_id}"
         )
         btn_feats.callback = self.features_callback
         self.add_item(btn_feats)
 
-        # 3. Pricing Tiers button
-        btn_price = discord.ui.Button(
-            label="💰 Pricing Tiers",
-            style=discord.ButtonStyle.secondary,
-            emoji="💵",
-            custom_id=f"null_price:{product_id}"
+    async def support_callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="🎟️ NULL Support & Ticket Desk",
+            description=(
+                "### Need Assistance or Have Questions?\n"
+                "> Open a ticket in our support channel or contact an administrator directly.\n\n"
+                f"• **Store Owner:** @{BOT_NAME}\n"
+                f"• **Direct Link:** {SUPPORT_URL}"
+            ),
+            color=discord.Color.from_rgb(239, 68, 68)
         )
-        btn_price.callback = self.pricing_callback
-        self.add_item(btn_price)
-
-        # 4. Status button
-        btn_status = discord.ui.Button(
-            label="🛡️ Status & Compatibility",
-            style=discord.ButtonStyle.secondary,
-            emoji="🟢",
-            custom_id=f"null_status:{product_id}"
-        )
-        btn_status.callback = self.status_callback
-        self.add_item(btn_status)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     def get_product(self):
         if self.product_data and self.product_data.get("name"):
@@ -1197,67 +1200,90 @@ def format_inr_price(val, default="N/A"):
     return s
 
 def build_product_embed(product_id: str, product: dict) -> discord.Embed:
-    """Builds an aesthetic, highly polished Discord Embed for a given product with permanent Red accent"""
-    # Title
-    raw_title = product.get('embed_title') or product.get('name', 'Unknown Product')
-    if not any(raw_title.startswith(emoji) for emoji in ["🛒", "💎", "⚡", "🎯", "🌐", "🔐", "🎥", "🛡️", "📦"]):
-        title_str = f"🛒 {raw_title}"
+    """Builds an expansive, high-impact Discord Embed inspired by clean game/software releases with minimal emoji clutter"""
+    # Clean product title
+    raw_name = product.get('name') or product.get('embed_title') or product_id
+    raw_name = re.sub(r'^[^\w\d]+', '', str(raw_name)).strip()
+    if not raw_name:
+        raw_name = str(product_id).upper()
+
+    cat = str(product.get('category', 'General')).strip()
+    cat = re.sub(r'^[^\w\d]+', '', cat).strip() or "General"
+
+    raw_status = str(product.get('status', 'Undetected')).strip()
+    s_low = raw_status.lower()
+    if 'undetected' in s_low:
+        clean_status = "🟢 UNDETECTED"
+    elif 'updating' in s_low:
+        clean_status = "🟡 UPDATING"
+    elif 'detected' in s_low:
+        clean_status = "🔴 DETECTED"
     else:
-        title_str = raw_title
+        clean_status = raw_status.upper()
 
-    # Accent color: STRICTLY RED (Permanent, not changeable)
-    color_obj = discord.Color.from_rgb(239, 68, 68)
+    stock = str(product.get('stock', 'In Stock')).strip()
+    compat = str(product.get('compatibility', 'Windows 10 / 11 (All Builds) • Intel & AMD')).strip()
+    desc = str(product.get('description', '')).strip() or "Premium optimized software with priority security & high performance."
 
-    desc = product.get('description', '').strip() or "No description provided."
-
-    embed = discord.Embed(
-        title=title_str,
-        description=desc,
-        color=color_obj,
-        timestamp=datetime.now()
-    )
-
-    # Category, Status & Stock (3 columns inline)
-    cat = product.get('category', 'General')
-    status = product.get('status', '🟢 Undetected')
-    stock = product.get('stock', 'In Stock')
-    compat = product.get('compatibility', 'Windows 10 / 11 (All Builds) | Intel & AMD')
-
-    embed.add_field(name="📂 Category", value=cat, inline=True)
-    embed.add_field(name="🛡️ Status", value=status, inline=True)
-    embed.add_field(name="📦 Stock", value=stock, inline=True)
-
-    # Pricing grid (full-width for clean readability)
     p1 = format_inr_price(product.get('price_1d'), "₹100")
     p7 = format_inr_price(product.get('price_7d'), "₹500")
     p30 = format_inr_price(product.get('price_30d'), "₹1,200")
     plife = format_inr_price(product.get('price_lifetime'), "₹2,500")
 
-    pricing_text = (
-        f"• 1 Day: {p1}\n"
-        f"• 7 Days: {p7}\n"
-        f"• 30 Days: {p30}\n"
-        f"• Lifetime: {plife}"
+    # Features: clean uppercase bullets with NO emoji clutter
+    raw_features = product.get('features', [])
+    if isinstance(raw_features, str):
+        raw_features = [f.strip() for f in raw_features.split("\n") if f.strip()]
+
+    cleaned_feats = []
+    for f in raw_features:
+        f = f.strip()
+        if not f:
+            continue
+        # Remove any leading emojis or symbols
+        f_clean = re.sub(r'^[^\w\d]+', '', f).strip()
+        if f_clean:
+            cleaned_feats.append(f"• {f_clean.upper()}")
+
+    if not cleaned_feats:
+        cleaned_feats = ["• 100% SAFE ON ALL SERVERS", "• ANTI-BAN SECURITY PROTECTION", "• HIGH PERFORMANCE & INSTANT SETUP"]
+
+    feats_str = "\n".join(cleaned_feats[:8])
+
+    # Big, bold Markdown body matching the user's screenshot
+    desc_lines = [
+        f"# 📢 NULL • {raw_name.upper()}",
+        f"> **Status:** {clean_status}  •  **Category:** {cat.upper()}  •  **Stock:** {stock.upper()}",
+        "",
+        "### 📋 PRODUCT OVERVIEW",
+        f"> {desc}",
+        "",
+        "### 💰 SUBSCRIPTION PRICING",
+        "```yaml",
+        f"1 DAY    : {p1}",
+        f"7 DAYS   : {p7}",
+        f"30 DAYS  : {p30}",
+        f"LIFETIME : {plife}",
+        "```",
+        "",
+        "### ⚙️ SYSTEM COMPATIBILITY",
+        f"> {compat}",
+        "",
+        "### ⚡ KEY HIGHLIGHTS",
+        feats_str,
+        "",
+        "### 🎫 CUSTOMER SUPPORT DESK",
+        "> Need help or ready to purchase? Click **Buy / Order** below.",
+        f"> **Store Owner:** @{BOT_NAME}  •  **Support:** Open a Ticket"
+    ]
+
+    color_obj = discord.Color.from_rgb(239, 68, 68)
+
+    embed = discord.Embed(
+        description="\n".join(desc_lines),
+        color=color_obj,
+        timestamp=datetime.now()
     )
-    embed.add_field(name="💰 Pricing Plans (INR)", value=pricing_text, inline=False)
-    embed.add_field(name="💻 Compatibility", value=compat, inline=False)
-
-    # Key Highlights / Features (clean checklist)
-    features = product.get('features', [])
-    if isinstance(features, str):
-        features = [f.strip() for f in features.split("\n") if f.strip()]
-
-    if features:
-        cleaned_features = []
-        for f in features:
-            f = f.strip()
-            if not f:
-                continue
-            if not f.startswith(("✅", "🔹", "•", "-", "✓", "🎯", "⚡", "🛡️", "✨", "🚀", "💎", "🔒")):
-                f = f"✅ {f}"
-            cleaned_features.append(f)
-        if cleaned_features:
-            embed.add_field(name="✨ Key Highlights", value="\n".join(cleaned_features[:10]), inline=False)
 
     # Media / Banners (Supports direct URL, CDN links, and attachments)
     thumb = product.get('thumbnail_url') or product.get('thumbnail')
@@ -1268,9 +1294,7 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
     if img and isinstance(img, str) and img.strip().startswith(('http://', 'https://')):
         embed.set_image(url=img.strip())
 
-    # Footer
-    views = product.get('views_count', 0)
-    embed.set_footer(text=f"ID: {product_id} • Views: {views} • NULL System")
+    embed.set_footer(text=f"NULL Systems • Official Release • ID: {product_id}")
     return embed
 
 # =========================================================
