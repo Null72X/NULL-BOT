@@ -101,13 +101,15 @@ TOKEN = os.getenv("TOKEN")
 ADMIN_ROLE_ID = int(os.getenv("ADMIN_ROLE_ID", "0") or "0")
 OWNER_ID = int(os.getenv("OWNER_ID", "0") or "0")
 DEFAULT_SHOWCASE_CHANNEL_ID = int(os.getenv("SHOWCASE_CHANNEL_ID", "0") or "0")
-DEFAULT_LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", "1547230630759239710") or "1547230630759239710")
+DEFAULT_TICKET_CHANNEL_ID = int(os.getenv("TICKET_CHANNEL_ID", "1510598021186977832") or "1510598021186977832")
+DEFAULT_LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", "1510598021186977832") or "1510598021186977832")
 BOT_NAME = os.getenv("BOT_NAME", "NULL")
 CURRENCY_SYMBOL = os.getenv("CURRENCY_SYMBOL", "₹")
-SUPPORT_URL = os.getenv("SUPPORT_URL", "https://discord.gg/")
+DEFAULT_TICKET_URL = "https://discord.com/channels/1510594295097200712/1510598021186977832"
+SUPPORT_URL = os.getenv("SUPPORT_URL", DEFAULT_TICKET_URL)
 BUY_INSTRUCTIONS = os.getenv(
     "BUY_INSTRUCTIONS", 
-    "To purchase, click the 'Order / Buy' button to submit an order ticket or contact an administrator."
+    "To purchase, click the 'Buy Now' button to submit an order or head to our Ticket Center channel!"
 )
 
 if not TOKEN:
@@ -410,9 +412,10 @@ DEFAULT_DATA = {
     "config": {
         "showcase_channel_id": str(DEFAULT_SHOWCASE_CHANNEL_ID),
         "log_channel_id": str(DEFAULT_LOG_CHANNEL_ID),
+        "ticket_channel_id": str(DEFAULT_TICKET_CHANNEL_ID),
         "brand_name": BOT_NAME,
         "currency_symbol": CURRENCY_SYMBOL,
-        "support_url": SUPPORT_URL
+        "support_url": DEFAULT_TICKET_URL
     },
     "categories": {
         "external plans": "External Plans",
@@ -448,6 +451,17 @@ def load_json():
                     if pid not in products:
                         products[pid] = json.loads(json.dumps(pval))
                         changed = True
+
+                # Ensure ticket channel & support URL defaults
+                conf = data.setdefault("config", {})
+                if not conf.get("ticket_channel_id") or conf.get("ticket_channel_id") == "0":
+                    conf["ticket_channel_id"] = str(DEFAULT_TICKET_CHANNEL_ID)
+                    changed = True
+                cur_support = conf.get("support_url", "")
+                if not cur_support or "1543872330973978674" in cur_support or cur_support == "https://discord.gg/":
+                    conf["support_url"] = DEFAULT_TICKET_URL
+                    changed = True
+
                 if changed:
                     save_json(data)
                 return data
@@ -835,6 +849,30 @@ def run_flask():
 # DISCORD UI COMPONENTS (VIEWS & MODALS)
 # =========================================================
 
+class OrderStaffView(discord.ui.View):
+    """Persistent staff interactive buttons on order notifications"""
+    def __init__(self, customer_id: int = 0, product_name: str = "", order_id: int = 0):
+        super().__init__(timeout=None)
+        self.customer_id = customer_id
+        self.product_name = product_name
+        self.order_id = order_id
+        self.claimed_by = None
+
+    @discord.ui.button(label="Claim Order", style=discord.ButtonStyle.success, emoji="✅", custom_id="null_staff_claim")
+    async def claim_callback(self, btn_interaction: discord.Interaction, button: discord.ui.Button):
+        if self.claimed_by:
+            await btn_interaction.response.send_message(f"⚠️ This order was already claimed by {self.claimed_by.mention}!", ephemeral=True)
+            return
+        self.claimed_by = btn_interaction.user
+        button.label = f"Claimed by {btn_interaction.user.display_name}"
+        button.disabled = True
+        button.style = discord.ButtonStyle.secondary
+        await btn_interaction.response.edit_message(view=self)
+        cust_str = f"<@{self.customer_id}>" if self.customer_id else "Customer"
+        await btn_interaction.followup.send(
+            f"🎯 {btn_interaction.user.mention} has **claimed** this order for {cust_str}! Assisting customer in Ticket Center."
+        )
+
 class OrderModal(discord.ui.Modal, title="🛒 Order Request - NULL"):
     duration = discord.ui.TextInput(
         label="Subscription Duration",
@@ -864,61 +902,67 @@ class OrderModal(discord.ui.Modal, title="🛒 Order Request - NULL"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        
-        # User confirmation
+        order_id = int(time.time())
+        data = load_json()
+        conf = data.get("config", {})
+        ticket_chan_id = int(conf.get("ticket_channel_id", DEFAULT_TICKET_CHANNEL_ID) or DEFAULT_TICKET_CHANNEL_ID)
+        ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+
+        # User confirmation with direct link button to Ticket Center
         confirm_embed = discord.Embed(
-            title="✅ Order Request Submitted!",
             description=(
-                f"Thank you **{interaction.user.name}**! Your request for **{self.product_name}** has been received.\n\n"
-                f"**Duration:** `{self.duration.value}`\n"
-                f"**Payment:** `{self.payment_method.value}`\n\n"
-                f"An administrator will reach out to you shortly, or you may open a ticket in our support server: {SUPPORT_URL}"
+                f"## ✅ Order Request Submitted!\n\n"
+                f"Thank you **{interaction.user.name}**! Your request for **{self.product_name}** has been registered.\n\n"
+                f"⏱️ **Duration:** **`{self.duration.value}`**\n"
+                f"💳 **Payment Method:** **`{self.payment_method.value}`**\n\n"
+                f"📍 **Next Step:** Head directly to our **Ticket Center** (<#{ticket_chan_id}>) to complete your order and receive your panel access!"
             ),
-            color=discord.Color.purple(),
+            color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
-        confirm_embed.set_footer(text=f"NULL Systems • Order ID: {int(time.time())}")
-        await interaction.followup.send(embed=confirm_embed, ephemeral=True)
-        
-        # Dispatch alert to configured order notification channel (1547230630759239710)
-        log_chan_id = 0
-        try:
-            if hasattr(self.bot_ref, 'get_log_channel_id'):
-                log_chan_id = self.bot_ref.get_log_channel_id()
-            else:
-                data = load_json()
-                log_chan_id = int(data.get("config", {}).get("log_channel_id", "1547230630759239710") or "1547230630759239710")
-        except:
-            log_chan_id = 1547230630759239710
+        confirm_embed.set_footer(text=f"NULL Systems • Order ID: #{order_id}")
 
-        if not log_chan_id or log_chan_id == 0:
-            log_chan_id = 1547230630759239710
+        confirm_view = discord.ui.View()
+        confirm_view.add_item(discord.ui.Button(
+            label="Open Ticket Center",
+            style=discord.ButtonStyle.link,
+            url=ticket_url,
+            emoji="🎫"
+        ))
+        await interaction.followup.send(embed=confirm_embed, view=confirm_view, ephemeral=True)
 
+        # Dispatch rich order alert to Default Ticket Center Channel
         bot_obj = self.bot_ref or bot_instance
-        if bot_obj and log_chan_id:
-            chan = bot_obj.get_channel(log_chan_id)
+        if bot_obj and ticket_chan_id:
+            chan = bot_obj.get_channel(ticket_chan_id)
             if not chan:
                 try:
-                    chan = await bot_obj.fetch_channel(log_chan_id)
-                except Exception as e:
+                    chan = await bot_obj.fetch_channel(ticket_chan_id)
+                except:
                     chan = None
             if chan:
                 alert_embed = discord.Embed(
-                    title="🚨 NEW PRODUCT ORDER REQUEST",
-                    color=discord.Color.from_rgb(239, 68, 68),  # Crimson Red
+                    description=f"## 🚨 NEW PRODUCT ORDER REQUEST\n\nA customer has submitted an order for **{self.product_name}**!",
+                    color=discord.Color.from_rgb(239, 68, 68),
                     timestamp=datetime.now()
                 )
                 alert_embed.add_field(name="👤 Customer", value=f"{interaction.user.mention} (`{interaction.user.name}` | ID: `{interaction.user.id}`)", inline=True)
                 alert_embed.add_field(name="🛒 Product", value=f"**{self.product_name}** (`{self.product_id}`)", inline=True)
-                alert_embed.add_field(name="⏱️ Duration", value=f"`{self.duration.value}`", inline=True)
-                alert_embed.add_field(name="💳 Payment Method", value=f"`{self.payment_method.value}`", inline=True)
+                alert_embed.add_field(name="⏱️ Duration", value=f"**`{self.duration.value}`**", inline=True)
+                alert_embed.add_field(name="💳 Payment Method", value=f"**`{self.payment_method.value}`**", inline=True)
                 if self.notes.value:
                     alert_embed.add_field(name="📝 Customer Notes", value=self.notes.value, inline=False)
-                alert_embed.set_footer(text=f"NULL Order Dispatch • Order #{int(time.time())}")
+                alert_embed.set_footer(text=f"NULL Order Dispatch • Order #{order_id}")
+                
+                staff_view = OrderStaffView(customer_id=interaction.user.id, product_name=self.product_name, order_id=order_id)
                 try:
-                    await chan.send(content=f"🔔 **Incoming Order Alert!** {interaction.user.mention} submitted an order for **{self.product_name}**!", embed=alert_embed)
+                    await chan.send(
+                        content=f"🔔 **Incoming Order Alert!** {interaction.user.mention} submitted an order for **{self.product_name}**!",
+                        embed=alert_embed,
+                        view=staff_view
+                    )
                 except Exception as e:
-                    print(f"⚠️ Failed to send order notification: {e}")
+                    print(f"⚠️ Failed to send order notification to Ticket Center: {e}")
 
 class ProductCardView(discord.ui.View):
     """Persistent Interactive Action Buttons attached to Product Cards"""
@@ -979,46 +1023,94 @@ class ProductCardView(discord.ui.View):
 
     async def features_callback(self, interaction: discord.Interaction):
         p = self.get_product()
+        pname = p.get("name") or self.product_id
         features = p.get("features", [])
         if not features:
             features_text = "No detailed features specified for this item."
         elif isinstance(features, str):
             features_text = features
         else:
-            features_text = "\n".join([f if f.startswith("✅") else f"✅ {f}" for f in features])
+            features_text = "\n".join([f"**{f}**" if f.startswith("✅") else f"**✅ {f}**" for f in features])
+
+        status = p.get("status", "🟢 Undetected")
+        compat = p.get("compatibility", "Windows 10 / 11 | Intel & AMD")
+        stock = p.get("stock", "In Stock")
 
         embed = discord.Embed(
-            description=f"## ✨ Features: {p.get('name', self.product_id)}\n\n{features_text}",
+            description=(
+                f"## ✨ {pname} — Key Highlights\n\n"
+                f"🛡️ **Status:** **{status}**\n"
+                f"📦 **Availability:** **{stock}**\n"
+                f"💻 **Compatibility:** **{compat}**\n\n"
+                f"### Feature Checklist:\n{features_text}"
+            ),
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
         embed.set_footer(text=f"ID: {self.product_id} • NULL System")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        data = load_json()
+        conf = data.get("config", {})
+        ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+
+        view = discord.ui.View()
+        btn_buy = discord.ui.Button(label="Buy Now", style=discord.ButtonStyle.primary, emoji="🛒")
+        async def buy_cb(btn_interaction: discord.Interaction):
+            modal = OrderModal(product_name=pname, product_id=self.product_id, bot_ref=self.bot_ref or bot_instance)
+            await btn_interaction.response.send_modal(modal)
+        btn_buy.callback = buy_cb
+        view.add_item(btn_buy)
+        view.add_item(discord.ui.Button(label="Open Ticket Center", style=discord.ButtonStyle.link, url=ticket_url, emoji="🎫"))
+
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     async def ticket_callback(self, interaction: discord.Interaction):
         data = load_json()
-        support_url = data.get("config", {}).get("support_url") or SUPPORT_URL
-        buy_instr = data.get("config", {}).get("buy_instructions") or BUY_INSTRUCTIONS
+        conf = data.get("config", {})
+        ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+        ticket_chan_id = conf.get("ticket_channel_id", str(DEFAULT_TICKET_CHANNEL_ID))
         p = self.get_product()
         pname = p.get("name") or self.product_id
 
         embed = discord.Embed(
-            description=f"## 🎫 Support & Order Ticket — {pname}\n\n{buy_instr}\n\n🔗 **Support Channel:** {support_url}",
+            description=(
+                f"## 🎫 NULL Ticket Center — {pname}\n\n"
+                f"Ready to purchase or need pre-sales support for **{pname}**?\n\n"
+                f"📍 **Official Ticket Center:** <#{ticket_chan_id}>\n"
+                f"⚡ **Support Team:** Active 24/7 • Fast Response\n\n"
+                f"Click **Jump to Ticket Center** below to visit the channel and connect with staff, or click **Quick Buy** to submit an order right away."
+            ),
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
         embed.set_footer(text=f"ID: {self.product_id} • NULL System")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            label="Jump to Ticket Center",
+            style=discord.ButtonStyle.link,
+            url=ticket_url,
+            emoji="🎫"
+        ))
+        btn_buy = discord.ui.Button(label="Quick Buy", style=discord.ButtonStyle.primary, emoji="🛒")
+        async def quick_buy_cb(btn_interaction: discord.Interaction):
+            modal = OrderModal(product_name=pname, product_id=self.product_id, bot_ref=self.bot_ref or bot_instance)
+            await btn_interaction.response.send_modal(modal)
+        btn_buy.callback = quick_buy_cb
+        view.add_item(btn_buy)
+
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     async def pricing_callback(self, interaction: discord.Interaction):
         p = self.get_product()
+        pname = p.get("name") or self.product_id
         p1 = p.get("price_1d", "₹100")
         p7 = p.get("price_7d", "₹500")
         p30 = p.get("price_30d", "₹1,200")
         plife = p.get("price_lifetime", "₹2,500")
 
         embed = discord.Embed(
-            description=f"## 💰 Pricing (INR): {p.get('name', self.product_id)}",
+            description=f"## 💰 Pricing (INR): {pname}",
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
@@ -1027,16 +1119,31 @@ class ProductCardView(discord.ui.View):
         embed.add_field(name="🗓️ 30 Days Access", value=f"**`{p30}`**", inline=True)
         embed.add_field(name="♾️ Lifetime Access", value=f"**`{plife}`**", inline=True)
         embed.set_footer(text="Prices in INR (₹) • Click 'Buy / Order' to purchase")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        data = load_json()
+        conf = data.get("config", {})
+        ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+
+        view = discord.ui.View()
+        btn_buy = discord.ui.Button(label="Buy Now", style=discord.ButtonStyle.primary, emoji="🛒")
+        async def buy_cb(btn_interaction: discord.Interaction):
+            modal = OrderModal(product_name=pname, product_id=self.product_id, bot_ref=self.bot_ref or bot_instance)
+            await btn_interaction.response.send_modal(modal)
+        btn_buy.callback = buy_cb
+        view.add_item(btn_buy)
+        view.add_item(discord.ui.Button(label="Ticket Center", style=discord.ButtonStyle.link, url=ticket_url, emoji="🎫"))
+
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     async def status_callback(self, interaction: discord.Interaction):
         p = self.get_product()
+        pname = p.get("name") or self.product_id
         status = p.get("status", "🟢 Undetected")
         compat = p.get("compatibility", "Windows 10 / 11 | Intel & AMD")
         stock = p.get("stock", "In Stock")
 
         embed = discord.Embed(
-            description=f"## 🛡️ Status: {p.get('name', self.product_id)}",
+            description=f"## 🛡️ Status: {pname}",
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
@@ -1044,7 +1151,21 @@ class ProductCardView(discord.ui.View):
         embed.add_field(name="Stock Level", value=f"**`{stock}`**", inline=True)
         embed.add_field(name="System Compatibility", value=f"**`{compat}`**", inline=False)
         embed.set_footer(text="Maintained by NULL Dev Team")
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        data = load_json()
+        conf = data.get("config", {})
+        ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+
+        view = discord.ui.View()
+        btn_buy = discord.ui.Button(label="Buy Now", style=discord.ButtonStyle.primary, emoji="🛒")
+        async def buy_cb(btn_interaction: discord.Interaction):
+            modal = OrderModal(product_name=pname, product_id=self.product_id, bot_ref=self.bot_ref or bot_instance)
+            await btn_interaction.response.send_modal(modal)
+        btn_buy.callback = buy_cb
+        view.add_item(btn_buy)
+        view.add_item(discord.ui.Button(label="Ticket Center", style=discord.ButtonStyle.link, url=ticket_url, emoji="🎫"))
+
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
 class CustomMessageView(discord.ui.View):
     """Interactive Action Buttons for custom announcements, store plans, and messages"""
@@ -2441,6 +2562,7 @@ class ProductBot(commands.Cog):
     @app_commands.describe(
         showcase_channel="Default channel to broadcast products and catalogs to",
         log_channel="Channel for security audit logs and order requests",
+        ticket_channel="Default channel for customer tickets and order fulfillment",
         support_url="Support server or ticket link"
     )
     async def config_set(
@@ -2448,6 +2570,7 @@ class ProductBot(commands.Cog):
         interaction: discord.Interaction,
         showcase_channel: discord.TextChannel = None,
         log_channel: discord.TextChannel = None,
+        ticket_channel: discord.TextChannel = None,
         support_url: str = None
     ):
         if not self.is_admin(interaction.user):
@@ -2459,6 +2582,9 @@ class ProductBot(commands.Cog):
             conf["showcase_channel_id"] = str(showcase_channel.id)
         if log_channel:
             conf["log_channel_id"] = str(log_channel.id)
+        if ticket_channel:
+            conf["ticket_channel_id"] = str(ticket_channel.id)
+            conf["support_url"] = f"https://discord.com/channels/{interaction.guild_id}/{ticket_channel.id}"
         if support_url:
             conf["support_url"] = support_url
 
@@ -2466,8 +2592,9 @@ class ProductBot(commands.Cog):
 
         embed = discord.Embed(title="⚙️ Bot Configuration Updated", color=discord.Color.green(), timestamp=datetime.now())
         embed.add_field(name="Showcase Channel", value=f"<#{conf.get('showcase_channel_id', '0')}>", inline=True)
+        embed.add_field(name="Ticket Center Channel", value=f"<#{conf.get('ticket_channel_id', DEFAULT_TICKET_CHANNEL_ID)}>", inline=True)
         embed.add_field(name="Audit Log Channel", value=f"<#{conf.get('log_channel_id', '0')}>", inline=True)
-        embed.add_field(name="Support URL", value=conf.get("support_url", SUPPORT_URL), inline=False)
+        embed.add_field(name="Support URL", value=conf.get("support_url", DEFAULT_TICKET_URL), inline=False)
         embed.set_footer(text="NULL Systems")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -2480,15 +2607,49 @@ class ProductBot(commands.Cog):
         conf = self.data.get("config", {})
         showcase_id = conf.get("showcase_channel_id", str(DEFAULT_SHOWCASE_CHANNEL_ID))
         log_id = conf.get("log_channel_id", str(DEFAULT_LOG_CHANNEL_ID))
+        ticket_id = conf.get("ticket_channel_id", str(DEFAULT_TICKET_CHANNEL_ID))
 
-        embed = discord.Embed(title="⚙️ NULL System Configuration", color=discord.Color.purple(), timestamp=datetime.now())
+        embed = discord.Embed(title="⚙️ NULL System Configuration", color=discord.Color.from_rgb(239, 68, 68), timestamp=datetime.now())
+        embed.add_field(name="Ticket Center Channel", value=f"`{ticket_id}` (<#{ticket_id}>)", inline=True)
         embed.add_field(name="Showcase Channel ID", value=f"`{showcase_id}` (<#{showcase_id}>)", inline=True)
         embed.add_field(name="Audit Log Channel ID", value=f"`{log_id}` (<#{log_id}>)", inline=True)
         embed.add_field(name="Bot Name", value=f"`{BOT_NAME}`", inline=True)
         embed.add_field(name="Admin Role ID", value=f"`{ADMIN_ROLE_ID}`", inline=True)
-        embed.add_field(name="Support URL", value=conf.get("support_url", SUPPORT_URL), inline=False)
+        embed.add_field(name="Support URL", value=conf.get("support_url", DEFAULT_TICKET_URL), inline=False)
         embed.set_footer(text="NULL Security Matrix")
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="ticket", description="Display the official NULL Ticket Center and customer support portal")
+    async def ticket_cmd(self, interaction: discord.Interaction):
+        data = load_json()
+        conf = data.get("config", {})
+        ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+        ticket_chan_id = conf.get("ticket_channel_id") or str(DEFAULT_TICKET_CHANNEL_ID)
+
+        embed = discord.Embed(
+            description=(
+                f"## 🎫 NULL Official Ticket Center\n\n"
+                f"Welcome to the official **NULL Support & Order Hub**!\n\n"
+                f"📍 **Dedicated Ticket Channel:** <#{ticket_chan_id}>\n"
+                f"⚡ **Services Available:**\n"
+                f"• Panel Key Purchases & License Deliveries\n"
+                f"• Technical Support & Loader Setup Assistance\n"
+                f"• VIP Role Claims & Custom Inquiries\n\n"
+                f"Click **Open Ticket Center** below to visit the channel and connect with our team!"
+            ),
+            color=discord.Color.from_rgb(239, 68, 68),
+            timestamp=datetime.now()
+        )
+        embed.set_footer(text=f"{BOT_NAME} Systems • Official Ticket Portal")
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            label="Open Ticket Center",
+            style=discord.ButtonStyle.link,
+            url=ticket_url,
+            emoji="🎫"
+        ))
+        await interaction.response.send_message(embed=embed, view=view)
 
     @app_commands.command(name="stats", description="View bot analytics, uptime, and database metrics")
     async def stats_cmd(self, interaction: discord.Interaction):
@@ -3251,7 +3412,8 @@ class NullBot(commands.Bot):
             for pid, p in products.items():
                 self.add_view(ProductCardView(pid, p, self))
             self.add_view(CustomMessageView(self, buy_enabled=True))
-            print(f"✅ [NULL] Registered persistent button listeners for {len(products)} products.")
+            self.add_view(OrderStaffView())
+            print(f"✅ [NULL] Registered persistent button listeners for {len(products)} products and staff actions.")
         except Exception as e:
             print(f"⚠️ [NULL] Failed to register persistent views: {e}")
 
@@ -3288,12 +3450,67 @@ class NullBot(commands.Bot):
                             modal = OrderModal(product_name=pname, product_id=pid, bot_ref=self)
                             await interaction.response.send_modal(modal)
                             return
+                        elif action == "null_ticket":
+                            data = load_json()
+                            conf = data.get("config", {})
+                            ticket_url = conf.get("support_url") or DEFAULT_TICKET_URL
+                            ticket_chan_id = conf.get("ticket_channel_id") or str(DEFAULT_TICKET_CHANNEL_ID)
+                            embed = discord.Embed(
+                                description=(
+                                    f"## 🎫 NULL Ticket Center — {pname}\n\n"
+                                    f"Need assistance, order fulfillment, or have questions about **{pname}**?\n\n"
+                                    f"📍 **Official Ticket Channel:** <#{ticket_chan_id}>\n"
+                                    f"⚡ **Status:** Active & Monitored • Staff Online\n\n"
+                                    f"Click **Jump to Ticket Center** below to visit the channel and connect with staff, or click **Quick Buy** to submit an order right away."
+                                ),
+                                color=discord.Color.from_rgb(239, 68, 68),
+                                timestamp=datetime.now()
+                            )
+                            embed.set_footer(text=f"ID: {pid} • NULL System")
+                            view = discord.ui.View()
+                            view.add_item(discord.ui.Button(
+                                label="Jump to Ticket Center",
+                                style=discord.ButtonStyle.link,
+                                url=ticket_url,
+                                emoji="🎫"
+                            ))
+                            btn_buy = discord.ui.Button(label="Quick Buy", style=discord.ButtonStyle.primary, emoji="🛒")
+                            async def quick_buy_cb(btn_interaction):
+                                modal = OrderModal(product_name=pname, product_id=pid, bot_ref=self)
+                                await btn_interaction.response.send_modal(modal)
+                            btn_buy.callback = quick_buy_cb
+                            view.add_item(btn_buy)
+                            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+                            return
                         elif action == "null_feats":
                             feats = p.get("features", [])
-                            ftext = "\n".join([f"🔹 **{f}**" for f in feats]) if feats else "No detailed features specified."
-                            embed = discord.Embed(description=f"## ✨ Features: {pname}\n\n{ftext}", color=discord.Color.from_rgb(239, 68, 68))
-                            embed.set_footer(text=f"NULL Systems • {pid}")
-                            await interaction.response.send_message(embed=embed, ephemeral=True)
+                            status = p.get("status", "🟢 Undetected")
+                            compat = p.get("compatibility", "Windows 10 / 11 | Intel & AMD")
+                            stock = p.get("stock", "In Stock")
+                            ftext = "\n".join([f"**{f}**" if f.startswith("✅") else f"**✅ {f}**" for f in feats]) if feats else "No detailed features specified."
+                            embed = discord.Embed(
+                                description=(
+                                    f"## ✨ {pname} — Key Highlights\n\n"
+                                    f"🛡️ **Status:** **{status}**\n"
+                                    f"📦 **Availability:** **{stock}**\n"
+                                    f"💻 **Compatibility:** **{compat}**\n\n"
+                                    f"### Feature Checklist:\n{ftext}"
+                                ),
+                                color=discord.Color.from_rgb(239, 68, 68),
+                                timestamp=datetime.now()
+                            )
+                            embed.set_footer(text=f"ID: {pid} • NULL System")
+                            data = load_json()
+                            ticket_url = data.get("config", {}).get("support_url") or DEFAULT_TICKET_URL
+                            view = discord.ui.View()
+                            btn_buy = discord.ui.Button(label="Buy Now", style=discord.ButtonStyle.primary, emoji="🛒")
+                            async def buy_cb(btn_interaction):
+                                modal = OrderModal(product_name=pname, product_id=pid, bot_ref=self)
+                                await btn_interaction.response.send_modal(modal)
+                            btn_buy.callback = buy_cb
+                            view.add_item(btn_buy)
+                            view.add_item(discord.ui.Button(label="Ticket Center", style=discord.ButtonStyle.link, url=ticket_url, emoji="🎫"))
+                            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
                             return
                         elif action == "null_price":
                             embed = discord.Embed(description=f"## 💰 Pricing (INR): {pname}", color=discord.Color.from_rgb(239, 68, 68))
@@ -3302,7 +3519,17 @@ class NullBot(commands.Bot):
                             embed.add_field(name="🗓️ 30 Days Access", value=f"**`{p.get('price_30d', '₹1,200')}`**", inline=True)
                             embed.add_field(name="♾️ Lifetime Access", value=f"**`{p.get('price_lifetime', '₹2,500')}`**", inline=True)
                             embed.set_footer(text="Prices in INR (₹) • Click 'Buy / Order' to purchase")
-                            await interaction.response.send_message(embed=embed, ephemeral=True)
+                            data = load_json()
+                            ticket_url = data.get("config", {}).get("support_url") or DEFAULT_TICKET_URL
+                            view = discord.ui.View()
+                            btn_buy = discord.ui.Button(label="Buy Now", style=discord.ButtonStyle.primary, emoji="🛒")
+                            async def buy_cb(btn_interaction):
+                                modal = OrderModal(product_name=pname, product_id=pid, bot_ref=self)
+                                await btn_interaction.response.send_modal(modal)
+                            btn_buy.callback = buy_cb
+                            view.add_item(btn_buy)
+                            view.add_item(discord.ui.Button(label="Ticket Center", style=discord.ButtonStyle.link, url=ticket_url, emoji="🎫"))
+                            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
                             return
                         elif action == "null_status":
                             embed = discord.Embed(description=f"## 🛡️ Status: {pname}", color=discord.Color.from_rgb(239, 68, 68))
@@ -3310,7 +3537,17 @@ class NullBot(commands.Bot):
                             embed.add_field(name="Stock Level", value=f"**`{p.get('stock', 'In Stock')}`**", inline=True)
                             embed.add_field(name="System Compatibility", value=f"**`{p.get('compatibility', 'Windows 10 / 11 | Intel & AMD')}`**", inline=False)
                             embed.set_footer(text="Maintained by NULL Dev Team")
-                            await interaction.response.send_message(embed=embed, ephemeral=True)
+                            data = load_json()
+                            ticket_url = data.get("config", {}).get("support_url") or DEFAULT_TICKET_URL
+                            view = discord.ui.View()
+                            btn_buy = discord.ui.Button(label="Buy Now", style=discord.ButtonStyle.primary, emoji="🛒")
+                            async def buy_cb(btn_interaction):
+                                modal = OrderModal(product_name=pname, product_id=pid, bot_ref=self)
+                                await btn_interaction.response.send_modal(modal)
+                            btn_buy.callback = buy_cb
+                            view.add_item(btn_buy)
+                            view.add_item(discord.ui.Button(label="Ticket Center", style=discord.ButtonStyle.link, url=ticket_url, emoji="🎫"))
+                            await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
                             return
                     else:
                         # Old random button ID from before persistent update

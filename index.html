@@ -201,6 +201,30 @@
             transform: translateY(-1px);
         }
 
+        .btn-ticket-link {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ticket-link:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #ef4444;
+            color: #ffffff;
+            box-shadow: 0 4px 14px var(--accent-red-glow);
+            transform: translateY(-1px);
+        }
+
         /* Container */
         .container {
             max-width: 1400px;
@@ -1073,6 +1097,9 @@
                     <span class="status-dot"></span>
                     <span id="botStatusText">Connecting...</span>
                 </div>
+                <a href="https://discord.com/channels/1510594295097200712/1510598021186977832" target="_blank" class="btn-ticket-link" title="Open Default Ticket Center">
+                    <span>🎫</span> Ticket Center
+                </a>
                 <button class="btn-custom-msg" onclick="openCustomModal()">
                     <span>📢</span> Custom Announcement
                 </button>
@@ -1914,7 +1941,7 @@
                     <div class="dc-buttons-mock">
                         <button class="dc-btn primary">🛒 Buy Now</button>
                         <button class="dc-btn">✨ Features</button>
-                        <button class="dc-btn">🎫 Open Ticket</button>
+                        <button class="dc-btn" onclick="window.open('https://discord.com/channels/1510594295097200712/1510598021186977832', '_blank')" style="cursor:pointer;" title="Jump to Official Ticket Center">🎫 Open Ticket</button>
                     </div>
                 </div>
             </div>
@@ -2042,7 +2069,8 @@
                 channelsData.forEach(ch => {
                     const opt = document.createElement('option');
                     opt.value = ch.id;
-                    opt.textContent = `#${ch.name} (${ch.guild_name})`;
+                    const isTicketCenter = String(ch.id) === "1510598021186977832";
+                    opt.textContent = isTicketCenter ? `#${ch.name} 🎫 (Default Ticket Center)` : `#${ch.name} (${ch.guild_name})`;
                     if (String(ch.id) === String(savedCh)) {
                         opt.selected = true;
                     }
@@ -2073,7 +2101,11 @@
             const modalSel = document.getElementById('modalChannelSelect');
             const customSel = document.getElementById('customChannelSelect');
             const optionsHtml = '<option value="">-- Select Discord Channel --</option>' + 
-                channelsData.map(ch => `<option value="${ch.id}">#${ch.name} (${ch.guild_name})</option>`).join('');
+                channelsData.map(ch => {
+                    const isTicketCenter = String(ch.id) === "1510598021186977832";
+                    const label = isTicketCenter ? `#${ch.name} 🎫 (Default Ticket Center)` : `#${ch.name} (${ch.guild_name})`;
+                    return `<option value="${ch.id}">${label}</option>`;
+                }).join('');
             
             if (modalSel) modalSel.innerHTML = optionsHtml;
             if (customSel) customSel.innerHTML = optionsHtml;
