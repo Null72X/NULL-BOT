@@ -988,8 +988,7 @@ class ProductCardView(discord.ui.View):
             features_text = "\n".join([f if f.startswith("✅") else f"✅ {f}" for f in features])
 
         embed = discord.Embed(
-            title=f"✨ Features: {p.get('name', self.product_id)}",
-            description=features_text,
+            description=f"## ✨ Features: {p.get('name', self.product_id)}\n\n{features_text}",
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
@@ -1004,8 +1003,7 @@ class ProductCardView(discord.ui.View):
         pname = p.get("name") or self.product_id
 
         embed = discord.Embed(
-            title=f"🎫 Support & Order Ticket — {pname}",
-            description=f"{buy_instr}\n\n🔗 **Support Channel:** {support_url}",
+            description=f"## 🎫 Support & Order Ticket — {pname}\n\n{buy_instr}\n\n🔗 **Support Channel:** {support_url}",
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
@@ -1020,14 +1018,14 @@ class ProductCardView(discord.ui.View):
         plife = p.get("price_lifetime", "₹2,500")
 
         embed = discord.Embed(
-            title=f"💰 Pricing (INR): {p.get('name', self.product_id)}",
+            description=f"## 💰 Pricing (INR): {p.get('name', self.product_id)}",
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
-        embed.add_field(name="⏱️ 1 Day Access", value=f"`{p1}`", inline=True)
-        embed.add_field(name="📅 7 Days Access", value=f"`{p7}`", inline=True)
-        embed.add_field(name="🗓️ 30 Days Access", value=f"`{p30}`", inline=True)
-        embed.add_field(name="♾️ Lifetime Access", value=f"`{plife}`", inline=True)
+        embed.add_field(name="⏱️ 1 Day Access", value=f"**`{p1}`**", inline=True)
+        embed.add_field(name="📅 7 Days Access", value=f"**`{p7}`**", inline=True)
+        embed.add_field(name="🗓️ 30 Days Access", value=f"**`{p30}`**", inline=True)
+        embed.add_field(name="♾️ Lifetime Access", value=f"**`{plife}`**", inline=True)
         embed.set_footer(text="Prices in INR (₹) • Click 'Buy / Order' to purchase")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -1038,13 +1036,13 @@ class ProductCardView(discord.ui.View):
         stock = p.get("stock", "In Stock")
 
         embed = discord.Embed(
-            title=f"🛡️ Status: {p.get('name', self.product_id)}",
+            description=f"## 🛡️ Status: {p.get('name', self.product_id)}",
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
         embed.add_field(name="Detection Status", value=f"**{status}**", inline=True)
-        embed.add_field(name="Stock Level", value=f"`{stock}`", inline=True)
-        embed.add_field(name="System Compatibility", value=f"`{compat}`", inline=False)
+        embed.add_field(name="Stock Level", value=f"**`{stock}`**", inline=True)
+        embed.add_field(name="System Compatibility", value=f"**`{compat}`**", inline=False)
         embed.set_footer(text="Maintained by NULL Dev Team")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -1215,10 +1213,10 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
     color_obj = discord.Color.from_rgb(239, 68, 68)
 
     desc = product.get('description', '').strip() or "No description provided."
+    description_text = f"## {title_str}\n{desc}"
 
     embed = discord.Embed(
-        title=title_str,
-        description=desc,
+        description=description_text,
         color=color_obj,
         timestamp=datetime.now()
     )
@@ -1229,9 +1227,9 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
     stock = product.get('stock', 'In Stock')
     compat = product.get('compatibility', 'Windows 10 / 11 (All Builds) | Intel & AMD')
 
-    embed.add_field(name="📁 Category", value=cat, inline=True)
-    embed.add_field(name="🛡️ Status", value=status, inline=True)
-    embed.add_field(name="📦 Stock", value=stock, inline=True)
+    embed.add_field(name="📁 Category", value=f"**{cat}**", inline=True)
+    embed.add_field(name="🛡️ Status", value=f"**{status}**", inline=True)
+    embed.add_field(name="📦 Stock", value=f"**{stock}**", inline=True)
 
     # Pricing grid (full-width for clean readability)
     p1 = format_inr_price(product.get('price_1d'), "₹100")
@@ -1240,13 +1238,13 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
     plife = format_inr_price(product.get('price_lifetime'), "₹2,500")
 
     pricing_text = (
-        f"• 1 Day: {p1}\n"
-        f"• 7 Days: {p7}\n"
-        f"• 30 Days: {p30}\n"
-        f"• Lifetime: {plife}"
+        f"• **1 Day**: **{p1}**\n"
+        f"• **7 Days**: **{p7}**\n"
+        f"• **30 Days**: **{p30}**\n"
+        f"• **Lifetime**: **{plife}**"
     )
     embed.add_field(name="💰 Pricing Plans (INR)", value=pricing_text, inline=False)
-    embed.add_field(name="💻 Compatibility", value=compat, inline=False)
+    embed.add_field(name="💻 Compatibility", value=f"**{compat}**", inline=False)
 
     # Key Highlights / Features (clean checklist)
     features = product.get('features', [])
@@ -1261,7 +1259,7 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
                 continue
             if not f.startswith("✅"):
                 f = f"✅ {f}"
-            cleaned_features.append(f)
+            cleaned_features.append(f"**{f}**")
         if cleaned_features:
             embed.add_field(name="✨ Key Highlights", value="\n".join(cleaned_features[:10]), inline=False)
 
@@ -3055,9 +3053,9 @@ def api_send_custom():
             content_payload = f"{ping_str}\n{description}" if ping_str else description
             msg = await ch.send(content=content_payload, view=view)
         else:
+            custom_desc = f"## {title}\n\n{description}" if title else description
             embed = discord.Embed(
-                title=title,
-                description=description,
+                description=custom_desc,
                 color=embed_color,
                 timestamp=datetime.now()
             )
@@ -3293,24 +3291,24 @@ class NullBot(commands.Bot):
                         elif action == "null_feats":
                             feats = p.get("features", [])
                             ftext = "\n".join([f"🔹 **{f}**" for f in feats]) if feats else "No detailed features specified."
-                            embed = discord.Embed(title=f"✨ Features: {pname}", description=ftext, color=discord.Color.from_rgb(239, 68, 68))
+                            embed = discord.Embed(description=f"## ✨ Features: {pname}\n\n{ftext}", color=discord.Color.from_rgb(239, 68, 68))
                             embed.set_footer(text=f"NULL Systems • {pid}")
                             await interaction.response.send_message(embed=embed, ephemeral=True)
                             return
                         elif action == "null_price":
-                            embed = discord.Embed(title=f"💰 Pricing (INR): {pname}", color=discord.Color.from_rgb(239, 68, 68))
-                            embed.add_field(name="⏱️ 1 Day Access", value=f"`{p.get('price_1d', '₹100')}`", inline=True)
-                            embed.add_field(name="📅 7 Days Access", value=f"`{p.get('price_7d', '₹500')}`", inline=True)
-                            embed.add_field(name="🗓️ 30 Days Access", value=f"`{p.get('price_30d', '₹1,200')}`", inline=True)
-                            embed.add_field(name="♾️ Lifetime Access", value=f"`{p.get('price_lifetime', '₹2,500')}`", inline=True)
+                            embed = discord.Embed(description=f"## 💰 Pricing (INR): {pname}", color=discord.Color.from_rgb(239, 68, 68))
+                            embed.add_field(name="⏱️ 1 Day Access", value=f"**`{p.get('price_1d', '₹100')}`**", inline=True)
+                            embed.add_field(name="📅 7 Days Access", value=f"**`{p.get('price_7d', '₹500')}`**", inline=True)
+                            embed.add_field(name="🗓️ 30 Days Access", value=f"**`{p.get('price_30d', '₹1,200')}`**", inline=True)
+                            embed.add_field(name="♾️ Lifetime Access", value=f"**`{p.get('price_lifetime', '₹2,500')}`**", inline=True)
                             embed.set_footer(text="Prices in INR (₹) • Click 'Buy / Order' to purchase")
                             await interaction.response.send_message(embed=embed, ephemeral=True)
                             return
                         elif action == "null_status":
-                            embed = discord.Embed(title=f"🛡️ Status: {pname}", color=discord.Color.from_rgb(239, 68, 68))
+                            embed = discord.Embed(description=f"## 🛡️ Status: {pname}", color=discord.Color.from_rgb(239, 68, 68))
                             embed.add_field(name="Detection Status", value=f"**{p.get('status', '🟢 Undetected')}**", inline=True)
-                            embed.add_field(name="Stock Level", value=f"`{p.get('stock', 'In Stock')}`", inline=True)
-                            embed.add_field(name="System Compatibility", value=f"`{p.get('compatibility', 'Windows 10 / 11 | Intel & AMD')}`", inline=False)
+                            embed.add_field(name="Stock Level", value=f"**`{p.get('stock', 'In Stock')}`**", inline=True)
+                            embed.add_field(name="System Compatibility", value=f"**`{p.get('compatibility', 'Windows 10 / 11 | Intel & AMD')}`**", inline=False)
                             embed.set_footer(text="Maintained by NULL Dev Team")
                             await interaction.response.send_message(embed=embed, ephemeral=True)
                             return
