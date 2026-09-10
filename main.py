@@ -928,45 +928,35 @@ class ProductCardView(discord.ui.View):
         self.product_data = product_data or {}
         self.bot_ref = bot_ref
 
-        # 1. Buy / Order button
+        # 1. Buy Now button (Primary / Blurple, matches web preview)
         btn_buy = discord.ui.Button(
-            label="🛒 Buy / Order",
-            style=discord.ButtonStyle.success,
-            emoji="💳",
+            label="Buy Now",
+            style=discord.ButtonStyle.primary,
+            emoji="🛒",
             custom_id=f"null_buy:{product_id}"
         )
         btn_buy.callback = self.buy_callback
         self.add_item(btn_buy)
 
-        # 2. Features button
+        # 2. Features button (Secondary / Grey, matches web preview)
         btn_feats = discord.ui.Button(
-            label="📋 Full Features",
-            style=discord.ButtonStyle.primary,
+            label="Features",
+            style=discord.ButtonStyle.secondary,
             emoji="✨",
             custom_id=f"null_feats:{product_id}"
         )
         btn_feats.callback = self.features_callback
         self.add_item(btn_feats)
 
-        # 3. Pricing Tiers button
-        btn_price = discord.ui.Button(
-            label="💰 Pricing Tiers",
+        # 3. Open Ticket button (Secondary / Grey, matches web preview)
+        btn_ticket = discord.ui.Button(
+            label="Open Ticket",
             style=discord.ButtonStyle.secondary,
-            emoji="💵",
-            custom_id=f"null_price:{product_id}"
+            emoji="🎫",
+            custom_id=f"null_ticket:{product_id}"
         )
-        btn_price.callback = self.pricing_callback
-        self.add_item(btn_price)
-
-        # 4. Status button
-        btn_status = discord.ui.Button(
-            label="🛡️ Status & Compatibility",
-            style=discord.ButtonStyle.secondary,
-            emoji="🟢",
-            custom_id=f"null_status:{product_id}"
-        )
-        btn_status.callback = self.status_callback
-        self.add_item(btn_status)
+        btn_ticket.callback = self.ticket_callback
+        self.add_item(btn_ticket)
 
     def get_product(self):
         if self.product_data and self.product_data.get("name"):
@@ -995,7 +985,7 @@ class ProductCardView(discord.ui.View):
         elif isinstance(features, str):
             features_text = features
         else:
-            features_text = "\n".join([f"🔹 **{f}**" for f in features])
+            features_text = "\n".join([f if f.startswith("✅") else f"✅ {f}" for f in features])
 
         embed = discord.Embed(
             title=f"✨ Features: {p.get('name', self.product_id)}",
@@ -1003,7 +993,23 @@ class ProductCardView(discord.ui.View):
             color=discord.Color.from_rgb(239, 68, 68),
             timestamp=datetime.now()
         )
-        embed.set_footer(text=f"NULL Systems • {self.product_id}")
+        embed.set_footer(text=f"ID: {self.product_id} • NULL System")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    async def ticket_callback(self, interaction: discord.Interaction):
+        data = load_json()
+        support_url = data.get("config", {}).get("support_url") or SUPPORT_URL
+        buy_instr = data.get("config", {}).get("buy_instructions") or BUY_INSTRUCTIONS
+        p = self.get_product()
+        pname = p.get("name") or self.product_id
+
+        embed = discord.Embed(
+            title=f"🎫 Support & Order Ticket — {pname}",
+            description=f"{buy_instr}\n\n🔗 **Support Channel:** {support_url}",
+            color=discord.Color.from_rgb(239, 68, 68),
+            timestamp=datetime.now()
+        )
+        embed.set_footer(text=f"ID: {self.product_id} • NULL System")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def pricing_callback(self, interaction: discord.Interaction):
@@ -1223,7 +1229,7 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
     stock = product.get('stock', 'In Stock')
     compat = product.get('compatibility', 'Windows 10 / 11 (All Builds) | Intel & AMD')
 
-    embed.add_field(name="📂 Category", value=cat, inline=True)
+    embed.add_field(name="📁 Category", value=cat, inline=True)
     embed.add_field(name="🛡️ Status", value=status, inline=True)
     embed.add_field(name="📦 Stock", value=stock, inline=True)
 
@@ -1253,7 +1259,7 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
             f = f.strip()
             if not f:
                 continue
-            if not f.startswith(("✅", "🔹", "•", "-", "✓", "🎯", "⚡", "🛡️", "✨", "🚀", "💎", "🔒")):
+            if not f.startswith("✅"):
                 f = f"✅ {f}"
             cleaned_features.append(f)
         if cleaned_features:
@@ -1268,9 +1274,8 @@ def build_product_embed(product_id: str, product: dict) -> discord.Embed:
     if img and isinstance(img, str) and img.strip().startswith(('http://', 'https://')):
         embed.set_image(url=img.strip())
 
-    # Footer
-    views = product.get('views_count', 0)
-    embed.set_footer(text=f"ID: {product_id} • Views: {views} • NULL System")
+    # Footer - matches web preview exactly (ID: {product_id} • NULL System)
+    embed.set_footer(text=f"ID: {product_id} • NULL System")
     return embed
 
 # =========================================================
